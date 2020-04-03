@@ -2,7 +2,7 @@
 /*
  * Kprobe template
  */
- #define pr_fmt(fmt) "kprobe: " fmt
+#define pr_fmt(fmt) "kprobe: " fmt
  
 #include <linux/kernel.h>
 #include <linux/module.h>
