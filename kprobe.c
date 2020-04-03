@@ -94,7 +94,7 @@ KPROBE_HANDLER_DEFINE4(do_sys_open,
 	return 0;
 }
 
-static int __init trace_cfs_init(void)
+static int __init kprobe_init(void)
 {
 	return do_sys_open_register();
 }
