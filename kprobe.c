@@ -73,18 +73,18 @@
 	static inline int __do_##name##_handler(__MAP(x, __SC_DECL,	\
 						      __VA_ARGS__))
 
-#define KPROBE_HANDLER_DEFINE1(name, ...) \
-	__KPROBE_HANDLER_DEFINE_x(1, name, __VA_ARGS__)
-#define KPROBE_HANDLER_DEFINE2(name, ...) \
-	__KPROBE_HANDLER_DEFINE_x(2, name, __VA_ARGS__)
-#define KPROBE_HANDLER_DEFINE3(name, ...) \
-	__KPROBE_HANDLER_DEFINE_x(3, name, __VA_ARGS__)
-#define KPROBE_HANDLER_DEFINE4(name, ...) \
-	__KPROBE_HANDLER_DEFINE_x(4, name, __VA_ARGS__)
-#define KPROBE_HANDLER_DEFINE5(name, ...) \
-	__KPROBE_HANDLER_DEFINE_x(5, name, __VA_ARGS__)
-#define KPROBE_HANDLER_DEFINE6(name, ...) \
-	__KPROBE_HANDLER_DEFINE_x(6, name, __VA_ARGS__)
+#define KPROBE_HANDLER_DEFINE1(function, ...) \
+	__KPROBE_HANDLER_DEFINE_x(1, function, __VA_ARGS__)
+#define KPROBE_HANDLER_DEFINE2(function, ...) \
+	__KPROBE_HANDLER_DEFINE_x(2, function, __VA_ARGS__)
+#define KPROBE_HANDLER_DEFINE3(function, ...) \
+	__KPROBE_HANDLER_DEFINE_x(3, function, __VA_ARGS__)
+#define KPROBE_HANDLER_DEFINE4(function, ...) \
+	__KPROBE_HANDLER_DEFINE_x(4, function, __VA_ARGS__)
+#define KPROBE_HANDLER_DEFINE5(function, ...) \
+	__KPROBE_HANDLER_DEFINE_x(5, function, __VA_ARGS__)
+#define KPROBE_HANDLER_DEFINE6(function, ...) \
+	__KPROBE_HANDLER_DEFINE_x(6, function, __VA_ARGS__)
 
 /* kprobe do_sys_open */
 KPROBE_HANDLER_DEFINE4(do_sys_open,
