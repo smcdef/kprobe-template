@@ -30,7 +30,7 @@
 #error "Unsupported architecture"
 #endif
 
-#define __KPROBE_HANDLER_DEFINE_x(x, name, ...)				\
+#define __KPROBE_HANDLER_DEFINE_COMM(name)				\
 	static int name##_handler(struct kprobe *p,			\
 				  struct pt_regs *regs);		\
 	static struct kprobe name##_kprobe = {				\
@@ -50,7 +50,10 @@
 	static inline void __exit name##_unregister(void)		\
 	{								\
 		unregister_kprobe(&name##_kprobe);			\
-	}								\
+	}
+
+#define __KPROBE_HANDLER_DEFINE_x(x, name, ...)				\
+	__KPROBE_HANDLER_DEFINE_COMM(name)				\
 	static inline int __se_##name##_handler(__MAP(x, __SC_LONG,	\
 						      __VA_ARGS__));	\
 	static inline int __do_##name##_handler(__MAP(x, __SC_DECL,	\
@@ -73,6 +76,16 @@
 	static inline int __do_##name##_handler(__MAP(x, __SC_DECL,	\
 						      __VA_ARGS__))
 
+#define KPROBE_HANDLER_DEFINE0(function)				\
+	__KPROBE_HANDLER_DEFINE_COMM(name)				\
+	static inline int __do_##name##_handler(void);			\
+	static int name##_handler(struct kprobe *p,			\
+				  struct pt_regs *regs)			\
+	{								\
+		return __do_##name##_handler();				\
+	}								\
+	static inline int __do_##name##_handler(void)
+
 #define KPROBE_HANDLER_DEFINE1(function, ...) \
 	__KPROBE_HANDLER_DEFINE_x(1, function, __VA_ARGS__)
 #define KPROBE_HANDLER_DEFINE2(function, ...) \
@@ -94,14 +107,18 @@ KPROBE_HANDLER_DEFINE4(do_sys_open,
 	return 0;
 }
 
+static struct kprobe *kprobes[] = {
+	&do_sys_open_kprobe,
+};
+
 static int __init kprobe_init(void)
 {
-	return do_sys_open_register();
+	return register_kprobes(kprobes, ARRAY_SIZE(kprobes));
 }
 
 static void __exit kprobe_exit(void)
 {
-	do_sys_open_unregister();
+	unregister_kprobes(kprobes, ARRAY_SIZE(kprobes));
 }
 
 module_init(kprobe_init);
