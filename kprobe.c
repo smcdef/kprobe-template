@@ -77,14 +77,14 @@
 						      __VA_ARGS__))
 
 #define KPROBE_HANDLER_DEFINE0(function)				\
-	__KPROBE_HANDLER_DEFINE_COMM(name)				\
-	static inline int __do_##name##_handler(void);			\
-	static int name##_handler(struct kprobe *p,			\
-				  struct pt_regs *regs)			\
+	__KPROBE_HANDLER_DEFINE_COMM(function)				\
+	static inline int __do_##function##_handler(void);		\
+	static int function##_handler(struct kprobe *p,			\
+				      struct pt_regs *regs)		\
 	{								\
-		return __do_##name##_handler();				\
+		return __do_##function##_handler();			\
 	}								\
-	static inline int __do_##name##_handler(void)
+	static inline int __do_##function##_handler(void)
 
 #define KPROBE_HANDLER_DEFINE1(function, ...) \
 	__KPROBE_HANDLER_DEFINE_x(1, function, __VA_ARGS__)
