@@ -8,10 +8,11 @@
 
 #include "kretprobe.h"
 
-#if 1
-/* kprobe inode_permission */
-KPROBE_ENTRY_HANDLER_DEFINE2(inode_permission, int *, mask_arg,
-			     struct inode *, inode, int, mask)
+#ifdef KRETPROBE_TEST
+#ifndef PROBE_OFFSET_TEST
+/* kretprobe inode_permission entry */
+KRETPROBE_ENTRY_HANDLER_DEFINE2(inode_permission, int *, mask_arg,
+				struct inode *, inode, int, mask)
 {
 	if (!inode->i_rdev || inode->i_ino != 1033)
 		return -1;
@@ -21,9 +22,9 @@ KPROBE_ENTRY_HANDLER_DEFINE2(inode_permission, int *, mask_arg,
 	return 0;
 }
 #else
-/* kprobe inode_permission offset */
-KPROBE_ENTRY_HANDLER_DEFINE_OFFSET(inode_permission, 0, int *, mask_arg,
-				   struct pt_regs *, regs)
+/* kprobe inode_permission offset entry */
+KRETPROBE_ENTRY_HANDLER_DEFINE_OFFSET(inode_permission, 0, int *, mask_arg,
+				      struct pt_regs *, regs)
 {
 	struct inode *inode = (void *)arg0(regs);
 
@@ -34,11 +35,36 @@ KPROBE_ENTRY_HANDLER_DEFINE_OFFSET(inode_permission, 0, int *, mask_arg,
 
 	return 0;
 }
-#endif
+#endif /* PROBE_OFFSET_TEST */
 
-/* kretprobe inode_permission */
-KPROBE_RET_HANDLER_DEFINE(inode_permission, int *, mask, int, retval)
+/* kretprobe inode_permission return */
+KRETPROBE_RET_HANDLER_DEFINE(inode_permission, int *, mask, int, retval)
 {
 	pr_info("mask: 0x%x, retval: %d\n", *mask, retval);
 	return 0;
 }
+#else
+#ifndef PROBE_OFFSET_TEST
+/* kprobe inode_permission */
+KPROBE_HANDLER_DEFINE2(inode_permission,
+		       struct inode *, inode, int, mask)
+{
+	if (!inode->i_rdev || inode->i_ino != 1033)
+		return 0;
+
+	return 0;
+}
+#else
+/* kprobe inode_permission offset */
+KPROBE_HANDLER_DEFINE_OFFSET(inode_permission, 0,
+			     struct pt_regs *, regs)
+{
+	struct inode *inode = (void *)arg0(regs);
+
+	if (!inode->i_rdev || inode->i_ino != 1033)
+		return 0;
+
+	return 0;
+}
+#endif /* PROBE_OFFSET_TEST */
+#endif /* KRETPROBE_TEST */
