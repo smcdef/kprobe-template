@@ -61,15 +61,26 @@
 									\
 		ret = register_kretprobe(&name##_kretprobe);		\
 		if (ret < 0)						\
-			pr_err("register kretprobe(%s) fail"		\
-			       " returned %d\n", #name, ret);		\
+			pr_err("register kretprobe(%s+0x%x) fail"	\
+			       " returned %d\n", #name, off, ret);	\
+		else							\
+			pr_info("planted return probe at %pS\n",	\
+				name##_kretprobe.kp.addr);		\
 		return ret;						\
 	}								\
 	module_init(name##_register);					\
 									\
 	static inline void __exit name##_unregister(void)		\
 	{								\
+		int nmissed = name##_kretprobe.nmissed;			\
+									\
+		if (nmissed)						\
+			pr_info("missed probing %d instances of %pS\n",	\
+				nmissed,				\
+				name##_kretprobe.kp.addr);		\
 		unregister_kretprobe(&name##_kretprobe);		\
+		pr_info("kretprobe at %pS unregistered\n",		\
+			name##_kretprobe.kp.addr);			\
 	}								\
 	module_exit(name##_unregister);					\
 									\
