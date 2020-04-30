@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 /*
- * kretprobe.h
+ * kprobe.h
  *
  * Here's a sample kernel module showing the use of return probes.
  */
-#ifndef __KRETPROBE_TEMPLATE_H
-#define __KRETPROBE_TEMPLATE_H
+#ifndef __KPROBE_TEMPLATE_H
+#define __KPROBE_TEMPLATE_H
 
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -304,4 +304,4 @@
 #define KPROBE_HANDLER_DEFINE_OFFSET(func, offset, ...) \
 	__KPROBE_HANDLER_DEFINE_OFFSET(func, offset, __VA_ARGS__)
 
-#endif /* __KRETPROBE_TEMPLATE_H */
+#endif /* __KPROBE_TEMPLATE_H */

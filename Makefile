@@ -1,4 +1,4 @@
-MODULE_NAME := kretprobe
+MODULE_NAME := kprobe
 
 obj-m += $(MODULE_NAME).o
 
