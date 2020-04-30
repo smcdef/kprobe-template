@@ -64,6 +64,8 @@ KPROBE_HANDLER_DEFINE_OFFSET(function, offset);
 As you can see, the `do_sys_open` has four parameters. So we should use the KPROBE_HANDLER_DEFINE4. For the same reason, if the function has none parameter. You should use the KPROBE_HANDLER_DEFINE0. Then we should program as follows.
 
 ```c
+#include "kretprobe.h"
+
 KPROBE_HANDLER_DEFINE4(do_sys_open,
                        int, dfd, const char __user *, filename,
                        int, flags, umode_t, mode)
@@ -77,6 +79,8 @@ KPROBE_HANDLER_DEFINE4(do_sys_open,
 If you want to kprobe a function at the special offet(e.g. 0x5). Just like this.
 
 ```c
+#include "kretprobe.h"
+
 KPROBE_HANDLER_DEFINE_OFFSET(do_sys_open, 0x5,
                              struct pt_regs *, regs)
 {
@@ -109,6 +113,8 @@ KRETPROBE_RET_HANDLER_DEFINE(func);
 Suppose you want to trace `do_sys_open`, and you want to print the parameters passed by its caller only when `do_sys_open` returns an error. How to do that?
 
 ```c
+#include "kretprobe.h"
+
 struct parameters {
         const char __user *filename;
         int flags;
