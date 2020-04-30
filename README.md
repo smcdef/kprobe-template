@@ -71,7 +71,7 @@ KPROBE_HANDLER_DEFINE4(do_sys_open,
                        int, flags, umode_t, mode)
 {
         /* Now you get all parameters. */
-        pr_info("mode: %xn", mode);
+        pr_info("mode: %x\n", mode);
         return 0;
 }
 ```
@@ -139,7 +139,7 @@ KRETPROBE_RET_HANDLER_DEFINE(do_sys_open,
                              struct parameters *, pars, int, retval)
 {
         if (retval < 0)
-                pr_info("flags: 0x%x, retval: %dn", pars->flags, retval);
+                pr_info("flags: 0x%x, retval: %d\n", pars->flags, retval);
         return 0;
 }
 ```
