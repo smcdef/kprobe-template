@@ -47,7 +47,7 @@ long do_sys_open(int dfd, const char __user *filename,
                  int flags, umode_t mode);
 ```
 
-In the kprobe.h, there are seven APIs that we can use for kprobe.
+In the [kprobe.h](./kprobe.h), there are seven APIs that we can use for kprobe.
 
 ```c
 KPROBE_HANDLER_DEFINE0(function);
@@ -94,7 +94,7 @@ KPROBE_HANDLER_DEFINE_OFFSET(do_sys_open, 0x5,
 
 ### kretprobe
 
-In the kprobe.h, there are seven APIs that we can use for kretprobe. Six of them are for entry handler, the other is for return handler.
+In the [kprobe.h](./kprobe.h), there are seven APIs that we can use for kretprobe. Six of them are for entry handler, the other is for return handler.
 
 ```c
 /* entry handler */
@@ -144,4 +144,4 @@ KRETPROBE_RET_HANDLER_DEFINE(do_sys_open,
 }
 ```
 
-The `do_sys_open` has four parameters, so you should use KRETPROBE_ENTRY_HANDLER_DEFINE4. The `struct parameters`is the your own private data structure. If you only want to store one parameter or other privata data(maybe timestamp or what else you want), you can just use a `long` type instead of a structure. The KRETPROBE_RET_HANDLER_DEFINE only has two parameters, one is the private data structure and the other is the `retval`Â which is the return value for the `do_sys_open` function.
+The `do_sys_open` has four parameters, so you should use KRETPROBE_ENTRY_HANDLER_DEFINE4. The `struct parameters`is the your own private data structure. If you only want to store one parameter or other privata data(maybe timestamp or what else you want), you can just use a `long` type instead of a structure. The KRETPROBE_RET_HANDLER_DEFINE only has two parameters, one is the private data structure and the other is the `retval`‚ which is the return value for the `do_sys_open` function.
