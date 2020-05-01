@@ -76,6 +76,8 @@ KPROBE_HANDLER_DEFINE4(do_sys_open,
 }
 ```
 
+### kprobe at offset
+
 If you want to kprobe a function at the special offet(e.g. 0x5). Just like this.
 
 ```c
@@ -145,3 +147,7 @@ KRETPROBE_RET_HANDLER_DEFINE(do_sys_open,
 ```
 
 The `do_sys_open` has four parameters, so you should use KRETPROBE_ENTRY_HANDLER_DEFINE4. The `struct parameters`is the your own private data structure. If you only want to store one parameter or other privata data(maybe timestamp or what else you want), you can just use a `long` type instead of a structure. The KRETPROBE_RET_HANDLER_DEFINE only has two parameters, one is the private data structure and the other is the `retval`‚ which is the return value for the `do_sys_open` function.
+
+### kretprobe at offset
+
+The kretprobe does not support the specified offset except zero. So if you want to use the KRETPROBE_ENTRY_HANDLER_DEFINE_OFFSET(func, offset, type, arg) macro. The `offset` must be zero. Otherwise kretprobe will fail to register.
