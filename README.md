@@ -146,7 +146,7 @@ KRETPROBE_RET_HANDLER_DEFINE(do_sys_open,
 }
 ```
 
-The `do_sys_open` has four parameters, so you should use KRETPROBE_ENTRY_HANDLER_DEFINE4. The `struct parameters`is the your own private data structure. If you only want to store one parameter or other privata data(maybe timestamp or what else you want), you can just use a `long` type instead of a structure. The KRETPROBE_RET_HANDLER_DEFINE only has two parameters, one is the private data structure and the other is the `retval`‚ which is the return value for the `do_sys_open` function.
+The `do_sys_open` has four parameters, so you should use KRETPROBE_ENTRY_HANDLER_DEFINE4. The `struct parameters`is the your own private data structure. If you only want to store one parameter or other privata data(maybe timestamp or what else you want), you can just use a `long` type instead of a structure. The KRETPROBE_RET_HANDLER_DEFINE only has two parameters, one is the private data structure and the other is the `retval` which is the return value of the `do_sys_open` function. The `int` type is the `do_sys_open` function return type. If the function return type is a pointer type, here should be a pointer type.
 
 ### kretprobe at offset
 
