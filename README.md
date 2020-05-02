@@ -10,7 +10,7 @@ cd kprobe-template
 make -j8
 ```
 
-The `kprobe.ko`is the module name in the kprobe-template. Using the following command to install it.
+The `kprobes.ko`is the module name in the kprobe-template. Using the following command to install it.
 
 ```bash
 make install

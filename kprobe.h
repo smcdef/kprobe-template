@@ -50,6 +50,10 @@
 		.offset		= off,					\
 		.pre_handler	= name##_handler			\
 	};								\
+	static struct kprobe * const __##name##_kprobe __used		\
+	__attribute__((section(".__kprobe_template"))) =		\
+		&name##_kprobe;						\
+									\
 	static inline int __init name##_register(void)			\
 	{								\
 		int ret;						\
@@ -63,18 +67,13 @@
 				name##_kprobe.addr);			\
 		return ret;						\
 	}								\
-	module_init(name##_register);					\
 									\
 	static inline void __exit name##_unregister(void)		\
 	{								\
 		unregister_kprobe(&name##_kprobe);			\
 		pr_info("kprobe at %pS unregistered\n",			\
 			name##_kprobe.addr);				\
-	}								\
-	module_exit(name##_unregister);					\
-									\
-	MODULE_LICENSE("GPL");						\
-	MODULE_AUTHOR("Muchun Song <songmuchun@bytedance.com>");
+	}
 
 #define __KPROBE_HANDLER_DEFINE_x(x, name, ...)				\
 	__KPROBE_HANDLER_DEFINE_COMM(name, 0)				\
@@ -135,7 +134,6 @@
 
 /* kretprobe macro */
 #define __KRETPROBE_ENTRY_HANDLER_DEFINE_COMM(name, type, off)		\
-	extern type __kretprobe_private_size;				\
 	static int name##_entry_handler(struct kretprobe_instance *ri,	\
 					struct pt_regs *regs);		\
 	static int name##_ret_handler(struct kretprobe_instance *ri,	\
@@ -145,9 +143,13 @@
 		.kp.offset	= off,					\
 		.handler	= name##_ret_handler,			\
 		.entry_handler	= name##_entry_handler,			\
-		.data_size	= sizeof(*__kretprobe_private_size),	\
+		.data_size	= sizeof(*((type)0)),			\
 		.maxactive	= 0,					\
 	};								\
+	static struct kretprobe * const __##name##_kretprobe __used	\
+	__attribute__((section(".__kretprobe_template"))) =		\
+		&name##_kretprobe;					\
+									\
 	static inline int __init name##_register(void)			\
 	{								\
 		int ret;						\
@@ -161,7 +163,6 @@
 				name##_kretprobe.kp.addr);		\
 		return ret;						\
 	}								\
-	module_init(name##_register);					\
 									\
 	static inline void __exit name##_unregister(void)		\
 	{								\
@@ -174,11 +175,7 @@
 		unregister_kretprobe(&name##_kretprobe);		\
 		pr_info("kretprobe at %pS unregistered\n",		\
 			name##_kretprobe.kp.addr);			\
-	}								\
-	module_exit(name##_unregister);					\
-									\
-	MODULE_LICENSE("GPL");						\
-	MODULE_AUTHOR("Muchun Song <songmuchun@bytedance.com>");
+	}
 
 #define __KRETPROBE_ENTRY_HANDLER_DEFINE_x(x, name, type, arg, ...)	\
 	__KRETPROBE_ENTRY_HANDLER_DEFINE_COMM(name, type, 0)		\
