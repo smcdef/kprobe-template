@@ -61,7 +61,7 @@ static void __init tracepoint_lookup(struct tracepoint *tp, void *priv)
 	}
 }
 
-static int kprobe_register_kprobes(void)
+static int __init kprobe_register_kprobes(void)
 {
 	int ret;
 	struct kprobe * const *kprobe_ptr;
@@ -106,7 +106,7 @@ static void kprobe_unregister_kprobes(void)
 	}
 }
 
-static int kprobe_register_kretprobes(void)
+static int __init kprobe_register_kretprobes(void)
 {
 	int ret;
 	struct kretprobe * const *kretprobe_ptr;
@@ -156,7 +156,7 @@ static void kprobe_unregister_kretprobes(void)
 	}
 }
 
-static int kprobe_register_tracepoints(void)
+static int __init kprobe_register_tracepoints(void)
 {
 	int ret;
 	struct tracepoint_entry * const *tracepoint_ptr;
