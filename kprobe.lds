@@ -11,6 +11,11 @@ SECTIONS {
 		__start_kprobe_template = .;
 		KEEP(*(.__kprobe_template))
 		__stop_kprobe_template = .;
+		/*
+		 * Avoid compiler warning when there is only
+		 * kretprobes.
+		 */
+		KEEP(*(.__kprobe_dummy))
 	}
 
 	. = ALIGN(8);
@@ -18,5 +23,10 @@ SECTIONS {
 		__start_kretprobe_template = .;
 		KEEP(*(.__kretprobe_template))
 		__stop_kretprobe_template = .;
+		/*
+		 * Avoid compiler warning when there is only
+		 * kprobes.
+		 */
+		KEEP(*(.__kretprobe_dummy))
 	}
 }
