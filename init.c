@@ -61,21 +61,10 @@ static void __init tracepoint_lookup(struct tracepoint *tp, void *priv)
 	}
 }
 
-static int __init kprobes_init(void)
+static int kprobe_register_kprobes(void)
 {
 	int ret;
 	struct kprobe * const *kprobe_ptr;
-	struct kretprobe * const *kretprobe_ptr;
-	struct tracepoint_entry * const *tracepoint_ptr;
-
-	if (num_tracepoint()) {
-		int tp_initalized = 0;
-
-		/* Lookup for the tracepoint that we needed */
-		for_each_kernel_tracepoint(tracepoint_lookup, &tp_initalized);
-		if (!is_tracepoint_lookup_finshed(tp_initalized))
-			return -ENODEV;
-	}
 
 	for (kprobe_ptr = __start_kprobe_template;
 	     kprobe_ptr < __stop_kprobe_template; kprobe_ptr++) {
@@ -90,6 +79,37 @@ static int __init kprobes_init(void)
 			pr_info("kprobe register at %pS\n", kprobe->addr);
 		}
 	}
+
+	return 0;
+
+unregister_kprobes:
+	while (--kprobe_ptr >= __start_kprobe_template) {
+		struct kprobe *kprobe = *kprobe_ptr;
+
+		pr_info("kprobe unregister at %pS\n", kprobe->addr);
+		unregister_kprobe(kprobe);
+	}
+
+	return ret;
+}
+
+static void kprobe_unregister_kprobes(void)
+{
+	struct kprobe * const *kprobe_ptr = __stop_kprobe_template;
+
+	/* Unregister kprobes */
+	while (--kprobe_ptr >= __start_kprobe_template) {
+		struct kprobe *kprobe = *kprobe_ptr;
+
+		pr_info("kprobe unregister at %pS\n", kprobe->addr);
+		unregister_kprobe(kprobe);
+	}
+}
+
+static int kprobe_register_kretprobes(void)
+{
+	int ret;
+	struct kretprobe * const *kretprobe_ptr;
 
 	for (kretprobe_ptr = __start_kretprobe_template;
 	     kretprobe_ptr < __stop_kretprobe_template; kretprobe_ptr++) {
@@ -106,6 +126,40 @@ static int __init kprobes_init(void)
 				kretprobe->kp.addr);
 		}
 	}
+
+	return 0;
+unregister_kretprobes:
+	while (--kretprobe_ptr >= __start_kretprobe_template) {
+		struct kretprobe *kretprobe = *kretprobe_ptr;
+
+		pr_info("kretprobe unregister at %pS\n", kretprobe->kp.addr);
+		unregister_kretprobe(kretprobe);
+	}
+
+	return ret;
+}
+
+static void kprobe_unregister_kretprobes(void)
+{
+	struct kretprobe * const *kretprobe_ptr = __stop_kretprobe_template;
+
+	while (--kretprobe_ptr >= __start_kretprobe_template) {
+		struct kretprobe *kretprobe = *kretprobe_ptr;
+		int nmissed = kretprobe->nmissed;
+
+		if (nmissed)
+			pr_info("kretprobe missed probing %d instances"
+				" of %pS\n", nmissed, kretprobe->kp.addr);
+
+		pr_info("kretprobe unregister at %pS\n", kretprobe->kp.addr);
+		unregister_kretprobe(kretprobe);
+	}
+}
+
+static int kprobe_register_tracepoints(void)
+{
+	int ret;
+	struct tracepoint_entry * const *tracepoint_ptr;
 
 	for (tracepoint_ptr = __start_tracepoint_template;
 	     tracepoint_ptr < __stop_tracepoint_template; tracepoint_ptr++) {
@@ -124,7 +178,6 @@ static int __init kprobes_init(void)
 	}
 
 	return 0;
-
 unregister_tracepoints:
 	while (--tracepoint_ptr >= __start_tracepoint_template) {
 		struct tracepoint_entry *tracepoint = *tracepoint_ptr;
@@ -134,21 +187,53 @@ unregister_tracepoints:
 					    tracepoint->priv);
 	}
 
+	return ret;
+}
+
+static void kprobe_unregister_tracepoints(void)
+{
+	struct tracepoint_entry * const *tracepoint_ptr = __stop_tracepoint_template;
+
+	while (--tracepoint_ptr >= __start_tracepoint_template) {
+		struct tracepoint_entry *tracepoint = *tracepoint_ptr;
+
+		pr_info("tracepoint unregister at %s\n", tracepoint->name);
+		tracepoint_probe_unregister(tracepoint->tp, tracepoint->handler,
+					    tracepoint->priv);
+	}
+}
+
+static int __init kprobes_init(void)
+{
+	int ret;
+
+	if (num_tracepoint()) {
+		int tp_initalized = 0;
+
+		/* Lookup for the tracepoint that we needed */
+		for_each_kernel_tracepoint(tracepoint_lookup, &tp_initalized);
+		if (!is_tracepoint_lookup_finshed(tp_initalized))
+			return -ENODEV;
+	}
+
+	ret = kprobe_register_kprobes();
+	if (ret < 0)
+		return ret;
+
+	ret = kprobe_register_kretprobes();
+	if (ret < 0)
+		goto unregister_kprobes;
+
+	ret = kprobe_register_tracepoints();
+	if (ret < 0)
+		goto unregister_kretprobes;
+
+	return 0;
+
 unregister_kretprobes:
-	while (--kretprobe_ptr >= __start_kretprobe_template) {
-		struct kretprobe *kretprobe = *kretprobe_ptr;
-
-		pr_info("kretprobe unregister at %pS\n", kretprobe->kp.addr);
-		unregister_kretprobe(kretprobe);
-	}
-
+	kprobe_unregister_kretprobes();
 unregister_kprobes:
-	while (--kprobe_ptr >= __start_kprobe_template) {
-		struct kprobe *kprobe = *kprobe_ptr;
-
-		pr_info("kprobe unregister at %pS\n", kprobe->addr);
-		unregister_kprobe(kprobe);
-	}
+	kprobe_unregister_kprobes();
 
 	/* Make sure there is no caller left using the probe. */
 	if (num_tracepoint())
@@ -161,39 +246,9 @@ unregister_kprobes:
 
 static void __exit kprobes_exit(void)
 {
-	struct kprobe * const *kprobe_ptr = __stop_kprobe_template;
-	struct kretprobe * const *kretprobe_ptr = __stop_kretprobe_template;
-	struct tracepoint_entry * const *tracepoint_ptr = __stop_tracepoint_template;
-
-	/* Unregister tracepoints */
-	while (--tracepoint_ptr >= __start_tracepoint_template) {
-		struct tracepoint_entry *tracepoint = *tracepoint_ptr;
-
-		pr_info("tracepoint unregister at %s\n", tracepoint->name);
-		tracepoint_probe_unregister(tracepoint->tp, tracepoint->handler,
-					    tracepoint->priv);
-	}
-
-	/* Unregister kretprobes */
-	while (--kretprobe_ptr >= __start_kretprobe_template) {
-		struct kretprobe *kretprobe = *kretprobe_ptr;
-		int nmissed = kretprobe->nmissed;
-
-		if (nmissed)
-			pr_info("kretprobe missed probing %d instances"
-				" of %pS\n", nmissed, kretprobe->kp.addr);
-
-		pr_info("kretprobe unregister at %pS\n", kretprobe->kp.addr);
-		unregister_kretprobe(kretprobe);
-	}
-
-	/* Unregister kprobes */
-	while (--kprobe_ptr >= __start_kprobe_template) {
-		struct kprobe *kprobe = *kprobe_ptr;
-
-		pr_info("kprobe unregister at %pS\n", kprobe->addr);
-		unregister_kprobe(kprobe);
-	}
+	kprobe_unregister_tracepoints();
+	kprobe_unregister_kretprobes();
+	kprobe_unregister_kprobes();
 
 	/* Make sure there is no caller left using the probe. */
 	if (num_tracepoint())
