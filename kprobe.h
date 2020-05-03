@@ -60,10 +60,10 @@
 									\
 		ret = register_kprobe(&name##_kprobe);			\
 		if (ret < 0)						\
-			pr_err("register kprobe(%s) fail returned %d\n",\
-				#name, ret);				\
+			pr_err("kprobe register fail at %s+%x"		\
+			       " returned %d\n", #name, off, ret);	\
 		else							\
-			pr_info("planted kprobe at %pS\n",		\
+			pr_info("kprobe register at %pS\n",		\
 				name##_kprobe.addr);			\
 		return ret;						\
 	}								\
@@ -71,7 +71,7 @@
 	static inline void __exit name##_unregister(void)		\
 	{								\
 		unregister_kprobe(&name##_kprobe);			\
-		pr_info("kprobe at %pS unregistered\n",			\
+		pr_info("kprobe unregister at %pS\n",			\
 			name##_kprobe.addr);				\
 	}
 
@@ -156,10 +156,10 @@
 									\
 		ret = register_kretprobe(&name##_kretprobe);		\
 		if (ret < 0)						\
-			pr_err("register kretprobe(%s+0x%x) fail"	\
+			pr_err("kretprobe register fail at %s+%x"	\
 			       " returned %d\n", #name, off, ret);	\
 		else							\
-			pr_info("planted kretprobe at %pS\n",		\
+			pr_info("kretprobe register at %pS\n",		\
 				name##_kretprobe.kp.addr);		\
 		return ret;						\
 	}								\
@@ -169,11 +169,11 @@
 		int nmissed = name##_kretprobe.nmissed;			\
 									\
 		if (nmissed)						\
-			pr_info("missed probing %d instances of %pS\n",	\
-				nmissed,				\
+			pr_info("kretprobe missed probing %d instances"	\
+				" of %pS\n", nmissed,			\
 				name##_kretprobe.kp.addr);		\
 		unregister_kretprobe(&name##_kretprobe);		\
-		pr_info("kretprobe at %pS unregistered\n",		\
+		pr_info("kretprobe unregister at %pS\n",		\
 			name##_kretprobe.kp.addr);			\
 	}
 
