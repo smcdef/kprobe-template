@@ -50,7 +50,7 @@ TRACEPOINT_HANDLER_DEFINE(signal_generate,
 	static const char *result_name[] = {
 		"deliverd",
 		"ignored",
-		"alread_pending",
+		"already_pending",
 		"overflow_fail",
 		"lose_info",
 	};
