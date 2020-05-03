@@ -19,7 +19,7 @@ make install
 If the module is installed successfully, you can get the following message via the `dmesg`.
 
 ```bash
-kprobe: planted kretprobe at inode_permission+0x0/0x180
+kprobes: kprobe register at inode_permission+0x0/0x180
 ```
 
 If you want to uninstall the module, you can use the following command.
@@ -31,7 +31,7 @@ make remove
 Also, the `dmesg` will output the following message.
 
 ```bash
-kprobe: kprobe at inode_permission+0x0/0x180 unregistered
+kprobes: kprobe unregister at inode_permission+0x0/0x180
 ```
 
 ## How to use
