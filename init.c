@@ -79,6 +79,9 @@ unregister_kprobes:
 		unregister_kprobe(kprobe);
 	}
 
+	/* Make sure there is no caller left using the probe. */
+	synchronize_sched();
+
 	return ret;
 }
 
@@ -107,6 +110,9 @@ static void __exit kprobes_exit(void)
 		pr_info("kprobe unregister at %pS\n", kprobe->addr);
 		unregister_kprobe(kprobe);
 	}
+
+	/* Make sure there is no caller left using the probe. */
+	synchronize_sched();
 }
 
 module_init(kprobes_init);
