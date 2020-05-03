@@ -108,3 +108,4 @@ module_init(kprobes_init);
 module_exit(kprobes_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Muchun Song <songmuchun@bytedance.com>");
+MODULE_DESCRIPTION("Kprobe template for easy register kprobe/kretprobe");
