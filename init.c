@@ -168,11 +168,11 @@ static int __init kprobe_register_tracepoints(void)
 		ret = tracepoint_probe_register(tracepoint->tp, tracepoint->handler,
 						tracepoint->priv);
 		if (ret && ret != -EEXIST) {
-			pr_err("tracepoint register fail at %s returned %d\n",
+			pr_err("tracepoint register fail at trace_%s returned %d\n",
 			       tracepoint->name, ret);
 			goto unregister_tracepoints;
 		} else {
-			pr_info("tracepoint register at %s\n",
+			pr_info("tracepoint register at trace_%s\n",
 				tracepoint->name);
 		}
 	}
@@ -182,7 +182,8 @@ unregister_tracepoints:
 	while (--tracepoint_ptr >= __start_tracepoint_template) {
 		struct tracepoint_entry *tracepoint = *tracepoint_ptr;
 
-		pr_info("tracepoint unregister at %s\n", tracepoint->name);
+		pr_info("tracepoint unregister at trace_%s\n",
+			tracepoint->name);
 		tracepoint_probe_unregister(tracepoint->tp, tracepoint->handler,
 					    tracepoint->priv);
 	}
@@ -197,7 +198,8 @@ static void kprobe_unregister_tracepoints(void)
 	while (--tracepoint_ptr >= __start_tracepoint_template) {
 		struct tracepoint_entry *tracepoint = *tracepoint_ptr;
 
-		pr_info("tracepoint unregister at %s\n", tracepoint->name);
+		pr_info("tracepoint unregister at trace_%s\n",
+			tracepoint->name);
 		tracepoint_probe_unregister(tracepoint->tp, tracepoint->handler,
 					    tracepoint->priv);
 	}
