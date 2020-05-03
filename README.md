@@ -36,7 +36,7 @@ kprobes: kprobe unregister at inode_permission+0x0/0x180
 
 ## How to use
 
-The API is mainly divided into two categories, namely kprobe and kretprobe. First let's see how to use the kprobe APIs.
+The API is mainly divided into three categories, namely kprobe, kretprobe and tracepoint. First let's see how to use the kprobe APIs.
 
 ### kprobe
 
@@ -151,3 +151,29 @@ The `do_sys_open` has four parameters, so you should use KRETPROBE_ENTRY_HANDLER
 ### kretprobe at offset
 
 The kretprobe does not support the specified offset except zero. So if you want to use the KRETPROBE_ENTRY_HANDLER_DEFINE_OFFSET(func, offset, type, arg) macro. The `offset` must be zero. Otherwise kretprobe will fail to register.
+
+### tracepoint
+
+There is only one API for tracepoint. Now if you want to trace signal via `trace_signal_generate`. You can use the TRACEPOINT_HANDLER_DEFINE. Just like this.
+
+```c
+#include "kprobe.h"
+
+/* tracepoint signal_generate */
+TRACEPOINT_HANDLER_DEFINE(signal_generate,
+			  int sig, struct siginfo *info,
+			  struct task_struct *task, int group, int result)
+{
+	static const char *result_name[] = {
+		"deliverd",
+		"ignored",
+		"alread_pending",
+		"overflow_fail",
+		"lose_info",
+	};
+
+	pr_info("%s(%d) send signal(%d) to %s %s(%d) with %s\n",
+		current->comm, current->pid, sig, group ? "group" : "single",
+		task->comm, task->pid, result_name[result]);
+}
+```

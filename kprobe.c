@@ -2,7 +2,7 @@
 /*
  * kprobe.c
  *
- * Here's a sample kernel module showing the use of return probes.
+ * Here's a sample kernel module showing the use of probes.
  */
 #define pr_fmt(fmt) "kprobes: " fmt
 
@@ -40,4 +40,22 @@ KPROBE_HANDLER_DEFINE2(__close_fd,
 		       struct files_struct *, files, unsigned, fd)
 {
 	return 0;
+}
+
+/* tracepoint signal_generate */
+TRACEPOINT_HANDLER_DEFINE(signal_generate,
+			  int sig, struct siginfo *info,
+			  struct task_struct *task, int group, int result)
+{
+	static const char *result_name[] = {
+		"deliverd",
+		"ignored",
+		"alread_pending",
+		"overflow_fail",
+		"lose_info",
+	};
+
+	pr_info("%s(%d) send signal(%d) to %s %s(%d) with %s\n",
+		current->comm, current->pid, sig, group ? "group" : "single",
+		task->comm, task->pid, result_name[result]);
 }

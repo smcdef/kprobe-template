@@ -11,6 +11,7 @@
 #include <linux/module.h>
 #include <linux/syscalls.h>
 #include <linux/kprobes.h>
+#include <linux/tracepoint.h>
 #include <asm/irq_regs.h>
 
 #if defined(CONFIG_X86_64)
@@ -40,6 +41,13 @@
 #else
 #error "Unsupported architecture"
 #endif
+
+struct tracepoint_entry {
+	const char *name;
+	void *handler;
+	void *priv;
+	struct tracepoint *tp;
+};
 
 /* kprobe macro */
 #define __KPROBE_HANDLER_DEFINE_COMM(name, off)				\
@@ -259,6 +267,18 @@
 									\
 	static inline int __do_##func##_entry_handler(type arg)
 
+/* tracepoint macro */
+#define __TRACEPOINT_HANDLER_DEFINE(tracepoint, ...)			\
+	static void tracepoint##_tp_handler(void *priv, __VA_ARGS__);	\
+	static struct tracepoint_entry tracepoint##_tp = {		\
+		.name		= #tracepoint,				\
+		.handler	= tracepoint##_tp_handler,		\
+		.priv		= NULL,					\
+	};								\
+	static struct tracepoint_entry * const __##tracepoint##_tp	\
+	__used __attribute__((section(".__tracepoint_template"))) =	\
+		&tracepoint##_tp;					\
+	static void tracepoint##_tp_handler(void *priv, __VA_ARGS__)
 
 /* The below is the kretprobe API for kernel module */
 #define KRETPROBE_ENTRY_HANDLER_DEFINE0(func, type, arg)      \
@@ -300,5 +320,9 @@
 
 #define KPROBE_HANDLER_DEFINE_OFFSET(func, offset, ...) \
 	__KPROBE_HANDLER_DEFINE_OFFSET(func, offset, __VA_ARGS__)
+
+/* The below is the tracepoint API for kernel module */
+#define TRACEPOINT_HANDLER_DEFINE(tracepoint, ...)	\
+	__TRACEPOINT_HANDLER_DEFINE(tracepoint, __VA_ARGS__)
 
 #endif /* __KPROBE_TEMPLATE_H */

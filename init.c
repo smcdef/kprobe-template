@@ -2,7 +2,7 @@
 /*
  * init.c
  *
- * Here's the register of kprobes and kretprobes.
+ * Here's the register of kprobes, kretprobes and tracepoints.
  */
 #define pr_fmt(fmt) "kprobes: " fmt
 
@@ -10,13 +10,16 @@
 
 /*
  * Avoid compiler warning when there is only one
- * of kprobes or kretprobes.
+ * of kprobes, kretprobes or tracepoints.
  */
 static struct kprobe * const __dummy_kprobe __used
 	__attribute__((section(".__kprobe_dummy"))) = NULL;
 
 static struct kretprobe * const __dummy_kretprobe __used
 	__attribute__((section(".__kretprobe_dummy"))) = NULL;
+
+static struct tracepoint_entry * const __dummy_tracepoint __used
+	__attribute__((section(".__tracepoint_dummy"))) = NULL;
 
 /* Defined in linker script */
 extern struct kprobe * const __start_kprobe_template[];
@@ -25,11 +28,54 @@ extern struct kprobe * const __stop_kprobe_template[];
 extern struct kretprobe * const __start_kretprobe_template[];
 extern struct kretprobe * const __stop_kretprobe_template[];
 
+extern struct tracepoint_entry * const __start_tracepoint_template[];
+extern struct tracepoint_entry * const __stop_tracepoint_template[];
+
+static inline int num_tracepoint(void)
+{
+	return __stop_tracepoint_template - __start_tracepoint_template;
+}
+
+static inline bool is_tracepoint_lookup_finshed(int tp_initalized)
+{
+	return tp_initalized == num_tracepoint();
+}
+
+static void __init tracepoint_lookup(struct tracepoint *tp, void *priv)
+{
+	struct tracepoint_entry * const *tracepoint_ptr;
+	int *tp_initalized = priv;
+
+	if (is_tracepoint_lookup_finshed(*tp_initalized))
+		return;
+
+	for (tracepoint_ptr = __start_tracepoint_template;
+	     tracepoint_ptr < __stop_tracepoint_template; tracepoint_ptr++) {
+		struct tracepoint_entry *tracepoint = *tracepoint_ptr;
+
+		if (tracepoint->tp || !tracepoint->name ||
+		    strcmp(tp->name, tracepoint->name))
+			continue;
+		tracepoint->tp = tp;
+		(*tp_initalized)++;
+	}
+}
+
 static int __init kprobes_init(void)
 {
 	int ret;
 	struct kprobe * const *kprobe_ptr;
 	struct kretprobe * const *kretprobe_ptr;
+	struct tracepoint_entry * const *tracepoint_ptr;
+
+	if (num_tracepoint()) {
+		int tp_initalized = 0;
+
+		/* Lookup for the tracepoint that we needed */
+		for_each_kernel_tracepoint(tracepoint_lookup, &tp_initalized);
+		if (!is_tracepoint_lookup_finshed(tp_initalized))
+			return -ENODEV;
+	}
 
 	for (kprobe_ptr = __start_kprobe_template;
 	     kprobe_ptr < __stop_kprobe_template; kprobe_ptr++) {
@@ -61,7 +107,32 @@ static int __init kprobes_init(void)
 		}
 	}
 
+	for (tracepoint_ptr = __start_tracepoint_template;
+	     tracepoint_ptr < __stop_tracepoint_template; tracepoint_ptr++) {
+		struct tracepoint_entry *tracepoint = *tracepoint_ptr;
+
+		ret = tracepoint_probe_register(tracepoint->tp, tracepoint->handler,
+						tracepoint->priv);
+		if (ret && ret != -EEXIST) {
+			pr_err("tracepoint register fail at %s returned %d\n",
+			       tracepoint->name, ret);
+			goto unregister_tracepoints;
+		} else {
+			pr_info("tracepoint register at %s\n",
+				tracepoint->name);
+		}
+	}
+
 	return 0;
+
+unregister_tracepoints:
+	while (--tracepoint_ptr >= __start_tracepoint_template) {
+		struct tracepoint_entry *tracepoint = *tracepoint_ptr;
+
+		pr_info("tracepoint unregister at %s\n", tracepoint->name);
+		tracepoint_probe_unregister(tracepoint->tp, tracepoint->handler,
+					    tracepoint->priv);
+	}
 
 unregister_kretprobes:
 	while (--kretprobe_ptr >= __start_kretprobe_template) {
@@ -80,7 +151,10 @@ unregister_kprobes:
 	}
 
 	/* Make sure there is no caller left using the probe. */
-	synchronize_sched();
+	if (num_tracepoint())
+		tracepoint_synchronize_unregister();
+	else
+		synchronize_sched();
 
 	return ret;
 }
@@ -89,6 +163,16 @@ static void __exit kprobes_exit(void)
 {
 	struct kprobe * const *kprobe_ptr = __stop_kprobe_template;
 	struct kretprobe * const *kretprobe_ptr = __stop_kretprobe_template;
+	struct tracepoint_entry * const *tracepoint_ptr = __stop_tracepoint_template;
+
+	/* Unregister tracepoints */
+	while (--tracepoint_ptr >= __start_tracepoint_template) {
+		struct tracepoint_entry *tracepoint = *tracepoint_ptr;
+
+		pr_info("tracepoint unregister at %s\n", tracepoint->name);
+		tracepoint_probe_unregister(tracepoint->tp, tracepoint->handler,
+					    tracepoint->priv);
+	}
 
 	/* Unregister kretprobes */
 	while (--kretprobe_ptr >= __start_kretprobe_template) {
@@ -112,11 +196,14 @@ static void __exit kprobes_exit(void)
 	}
 
 	/* Make sure there is no caller left using the probe. */
-	synchronize_sched();
+	if (num_tracepoint())
+		tracepoint_synchronize_unregister();
+	else
+		synchronize_sched();
 }
 
 module_init(kprobes_init);
 module_exit(kprobes_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Muchun Song <songmuchun@bytedance.com>");
-MODULE_DESCRIPTION("Kprobe template for easy register kprobe/kretprobe");
+MODULE_DESCRIPTION("Kprobe template for easy register kprobe/kretprobe/tracepoint");
