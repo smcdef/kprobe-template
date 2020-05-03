@@ -19,7 +19,10 @@ make install
 If the module is installed successfully, you can get the following message via the `dmesg`.
 
 ```bash
-kprobes: kprobe register at inode_permission+0x0/0x180
+[ 3508.653292] kprobes: kprobe register at __close_fd+0x0/0xa0
+[ 3508.659202] kprobes: kprobe register at do_sys_open+0x0/0x210
+[ 3508.668907] kprobes: kretprobe register at inode_permission+0x0/0x180
+[ 3508.668981] kprobes: tracepoint register at trace_signal_generate
 ```
 
 If you want to uninstall the module, you can use the following command.
@@ -31,7 +34,10 @@ make remove
 Also, the `dmesg` will output the following message.
 
 ```bash
-kprobes: kprobe unregister at inode_permission+0x0/0x180
+[ 3508.672202] kprobes: tracepoint unregister at trace_signal_generate
+[ 3508.672281] kprobes: kretprobe unregister at inode_permission+0x0/0x180
+[ 3508.682470] kprobes: kprobe unregister at do_sys_open+0x0/0x210
+[ 3508.699454] kprobes: kprobe unregister at __close_fd+0x0/0xa0
 ```
 
 ## How to use
