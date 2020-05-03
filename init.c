@@ -90,6 +90,11 @@ static void __exit kprobes_exit(void)
 	/* Unregister kretprobes */
 	while (--kretprobe_ptr >= __start_kretprobe_template) {
 		struct kretprobe *kretprobe = *kretprobe_ptr;
+		int nmissed = kretprobe->nmissed;
+
+		if (nmissed)
+			pr_info("kretprobe missed probing %d instances"
+				" of %pS\n", nmissed, kretprobe->kp.addr);
 
 		pr_info("kretprobe unregister at %pS\n", kretprobe->kp.addr);
 		unregister_kretprobe(kretprobe);
