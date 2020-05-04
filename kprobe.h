@@ -20,24 +20,24 @@
 	      ,,regs->di,,regs->si,,regs->dx				\
 	      ,,regs->r10,,regs->r8,,regs->r9)
 
-#define arg0(regs)	((regs)->di)
-#define arg1(regs)	((regs)->si)
-#define arg2(regs)	((regs)->dx)
-#define arg3(regs)	((regs)->r10)
-#define arg4(regs)	((regs)->r8)
-#define arg5(regs)	((regs)->r9)
+#define arg0(pt_regs)	((pt_regs)->di)
+#define arg1(pt_regs)	((pt_regs)->si)
+#define arg2(pt_regs)	((pt_regs)->dx)
+#define arg3(pt_regs)	((pt_regs)->r10)
+#define arg4(pt_regs)	((pt_regs)->r8)
+#define arg5(pt_regs)	((pt_regs)->r9)
 #elif defined(CONFIG_ARM64)
 #define SC_ARCH_REGS_TO_ARGS(x, ...)					\
 	__MAP(x,__SC_ARGS						\
 	      ,,regs->regs[0],,regs->regs[1],,regs->regs[2]		\
 	      ,,regs->regs[3],,regs->regs[4],,regs->regs[5])
 
-#define arg0(regs)	((regs)->regs[0])
-#define arg1(regs)	((regs)->regs[1])
-#define arg2(regs)	((regs)->regs[2])
-#define arg3(regs)	((regs)->regs[3])
-#define arg4(regs)	((regs)->regs[4])
-#define arg5(regs)	((regs)->regs[5])
+#define arg0(pt_regs)	((pt_regs)->regs[0])
+#define arg1(pt_regs)	((pt_regs)->regs[1])
+#define arg2(pt_regs)	((pt_regs)->regs[2])
+#define arg3(pt_regs)	((pt_regs)->regs[3])
+#define arg4(pt_regs)	((pt_regs)->regs[4])
+#define arg5(pt_regs)	((pt_regs)->regs[5])
 #else
 #error "Unsupported architecture"
 #endif
