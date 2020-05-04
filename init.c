@@ -227,8 +227,6 @@ unregister_kprobes:
 	/* Make sure there is no caller left using the probe. */
 	if (num_tracepoint())
 		tracepoint_synchronize_unregister();
-	else
-		synchronize_sched();
 
 	return ret;
 }
@@ -242,8 +240,6 @@ static void __exit kprobes_exit(void)
 	/* Make sure there is no caller left using the probe. */
 	if (num_tracepoint())
 		tracepoint_synchronize_unregister();
-	else
-		synchronize_sched();
 }
 
 module_init(kprobes_init);
