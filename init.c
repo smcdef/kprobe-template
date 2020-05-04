@@ -8,19 +8,6 @@
 
 #include "kprobe.h"
 
-/*
- * Avoid compiler warning when there is only one
- * of kprobes, kretprobes or tracepoints.
- */
-static struct kprobe * const __dummy_kprobe __used
-	__attribute__((section(".__kprobe_dummy"))) = NULL;
-
-static struct kretprobe * const __dummy_kretprobe __used
-	__attribute__((section(".__kretprobe_dummy"))) = NULL;
-
-static struct tracepoint_entry * const __dummy_tracepoint __used
-	__attribute__((section(".__tracepoint_dummy"))) = NULL;
-
 /* Defined in linker script */
 extern struct kprobe * const __start_kprobe_template[];
 extern struct kprobe * const __stop_kprobe_template[];
