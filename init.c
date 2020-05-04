@@ -135,8 +135,8 @@ static void kprobe_unregister_kretprobes(void)
 		int nmissed = kretprobe->nmissed;
 
 		if (nmissed)
-			pr_info("kretprobe missed probing %d instances"
-				" of %pS\n", nmissed, kretprobe->kp.addr);
+			pr_notice("kretprobe missed probing %d instances"
+				  " of %pS\n", nmissed, kretprobe->kp.addr);
 
 		pr_info("kretprobe unregister at %pS\n", kretprobe->kp.addr);
 		unregister_kretprobe(kretprobe);
