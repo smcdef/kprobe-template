@@ -1,10 +1,18 @@
 MODULE_NAME		:= kprobes
+MODULE_LICENSE		:= GPL
+MODULE_AUTHOR		:= Muchun Song <songmuchun@bytedance.com>
+MODULE_DESCRIPTION	:= Kprobe template for easy register kernel probes
 
 ifneq ($(KERNELRELEASE),)
 obj-m			:= $(MODULE_NAME).o
 $(MODULE_NAME)-m	:= init.o
 $(MODULE_NAME)-m	+= kprobe.o
 ldflags-y		+= -r -T $(PWD)/kprobe.lds
+
+name-fix   = $(squote)$(quote)$(subst $(comma),_,$(subst -,_,$1))$(quote)$(squote)
+ccflags-y += -DCONFIG_MODULE_AUTHOR=$(call name-fix,$(MODULE_AUTHOR))
+ccflags-y += -DCONFIG_MODULE_DESCRIPTION=$(call name-fix,$(MODULE_DESCRIPTION))
+ccflags-y += -DCONFIG_MODULE_LICENSE=$(call name-fix,$(MODULE_LICENSE))
 else
 PWD			:= $(shell pwd)
 KERNEL_HEAD		:= $(shell uname -r)

@@ -244,6 +244,6 @@ static void __exit kprobes_exit(void)
 
 module_init(kprobes_init);
 module_exit(kprobes_exit);
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Muchun Song <songmuchun@bytedance.com>");
-MODULE_DESCRIPTION("Kprobe template for easy register kprobe/kretprobe/tracepoint");
+MODULE_LICENSE(CONFIG_MODULE_LICENSE);
+MODULE_AUTHOR(CONFIG_MODULE_AUTHOR);
+MODULE_DESCRIPTION(CONFIG_MODULE_DESCRIPTION);
