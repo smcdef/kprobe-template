@@ -4,7 +4,7 @@
  *
  * Here's the register of kprobes, kretprobes and tracepoints.
  */
-#define pr_fmt(fmt) "kprobes: " fmt
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include "kprobe.h"
 
