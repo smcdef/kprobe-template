@@ -2,6 +2,18 @@
 
 I usually use kprobe/kretprobe in a kernel module. But I usually do a lot of pointless things. A lot of CTRL+C and CTRL+V. I am fed up with these. So I want to use macro definitions to do these meaningless things. So this is why I did this. Enjoy yourself.
 
+## Kernel Configuration
+
+In general, to use these features, the kernel should have been compiled with the following flags set:
+
+```bash
+CONFIG_HAVE_KPROBES=y
+CONFIG_KPROBES=y
+CONFIG_TRACEPOINTS=y
+# [optional, for syscall tracepoint]
+CONFIG_HAVE_SYSCALL_TRACEPOINTS=y
+```
+
 ## How to install
 
 ```bash
