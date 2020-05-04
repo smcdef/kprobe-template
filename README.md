@@ -67,7 +67,7 @@ KPROBE_HANDLER_DEFINE6(function);
 KPROBE_HANDLER_DEFINE_OFFSET(function, offset);
 ```
 
-As you can see, the `do_sys_open` has four parameters. So we should use the KPROBE_HANDLER_DEFINE4. For the same reason, if the function has none parameter. You should use the KPROBE_HANDLER_DEFINE0. Then we should program as follows.
+As you can see, the `do_sys_open` has four parameters. So we should use the `KPROBE_HANDLER_DEFINE4`. For the same reason, if the function has none parameter. You should use the `KPROBE_HANDLER_DEFINE0`. Then we should program as follows.
 
 ```c
 #include "kprobe.h"
@@ -152,15 +152,15 @@ KRETPROBE_RET_HANDLER_DEFINE(do_sys_open,
 }
 ```
 
-The `do_sys_open` has four parameters, so you should use KRETPROBE_ENTRY_HANDLER_DEFINE4. The `struct parameters`is the your own private data structure. If you only want to store one parameter or other privata data(maybe timestamp or what else you want), you can just use a `long` type instead of a structure. The KRETPROBE_RET_HANDLER_DEFINE only has two parameters, one is the private data structure and the other is the `retval` which is the return value of the `do_sys_open` function. The `int` type is the `do_sys_open` function return type. If the function return type is a pointer type, here should be a pointer type.
+The `do_sys_open` has four parameters, so you should use `KRETPROBE_ENTRY_HANDLER_DEFINE4`. The `struct parameters`is the your own private data structure. If you only want to store one parameter or other privata data(maybe timestamp or what else you want), you can just use a `long` type instead of a structure. The `KRETPROBE_RET_HANDLER_DEFINE` only has two parameters, one is the private data structure and the other is the `retval` which is the return value of the `do_sys_open` function. The `int` type is the `do_sys_open` function return type. If the function return type is a pointer type, here should be a pointer type.
 
 ### kretprobe at offset
 
-The kretprobe does not support the specified offset except zero. So if you want to use the KRETPROBE_ENTRY_HANDLER_DEFINE_OFFSET(func, offset, type, arg) macro. The `offset` must be zero. Otherwise kretprobe will fail to register.
+The kretprobe does not support the specified offset except zero. So if you want to use the `KRETPROBE_ENTRY_HANDLER_DEFINE_OFFSET(func, offset, type, arg)` macro. The `offset` must be zero. Otherwise kretprobe will fail to register.
 
 ### tracepoint
 
-There is only one API for tracepoint. Now if you want to trace signal via `trace_signal_generate`. You can use the TRACEPOINT_HANDLER_DEFINE. Just like this.
+There is only one API for tracepoint. Now if you want to trace signal via `trace_signal_generate`. You can use the `TRACEPOINT_HANDLER_DEFINE`. Just like this.
 
 ```c
 #include "kprobe.h"
