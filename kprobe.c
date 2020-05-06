@@ -23,7 +23,7 @@ KRETPROBE_ENTRY_HANDLER_DEFINE2(inode_permission, int *, private,
 /* kretprobe inode_permission return */
 KRETPROBE_RET_HANDLER_DEFINE(inode_permission, int *, mask, int, retval)
 {
-	pr_info("mask: 0x%x, retval: %d\n", *mask, retval);
+	kprobe_printk("mask: 0x%x, retval: %d\n", *mask, retval);
 	return 0;
 }
 
@@ -55,7 +55,8 @@ TRACEPOINT_HANDLER_DEFINE(signal_generate,
 		"lose_info",
 	};
 
-	pr_info("%s(%d) send signal(%d) to %s %s(%d) with %s\n",
-		current->comm, current->pid, sig, group ? "group" : "single",
-		task->comm, task->pid, result_name[result]);
+	kprobe_printk("%s(%d) send signal(%d) to %s %s(%d) with %s\n",
+		      current->comm, current->pid, sig,
+		      group ? "group" : "single", task->comm, task->pid,
+		      result_name[result]);
 }

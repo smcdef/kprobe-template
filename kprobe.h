@@ -325,4 +325,28 @@ struct tracepoint_entry {
 #define TRACEPOINT_HANDLER_DEFINE(tracepoint, ...)	\
 	__TRACEPOINT_HANDLER_DEFINE(tracepoint, __VA_ARGS__)
 
+/*
+ * printk() is the king of all debuggers, but it has a problem. If you
+ * are debugging a high volume area such as the timer interrupt, the
+ * scheduler, or the network, printk() can lead to bogging down the
+ * system or can even create a live lock. It is also quite common to
+ * see a bug "disappear" when adding a few printk()s. This is due to
+ * the sheer overhead that printk() introduces.
+ *
+ * Ftrace introduces a new form of printk() called trace_printk(). It
+ * can be used just like printk(), and can also be used in any context
+ * (interrupt code, NMI code, and scheduler code). What is nice about
+ * trace_printk() is that it does not output to the console. Instead it
+ * writes to the ftrace ring buffer and can be read via the trace file.
+ *
+ * Note:
+ * The trace_printk()s will only show the format and not their parameters.
+ *     echo printk-msg-only > /sys/kernel/debug/tracing/trace_options
+ *
+ * Read the trace file.
+ *     cat /sys/kernel/debug/tracing/trace_pipe
+ */
+#define kprobe_printk(fmt, ...)	\
+	trace_printk(KBUILD_MODNAME ": " fmt, ##__VA_ARGS__)
+
 #endif /* __KPROBE_TEMPLATE_H */
