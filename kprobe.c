@@ -8,6 +8,9 @@
 
 #include "kprobe.h"
 
+#define CREATE_PRINT_EVENT
+#include "trace/kprobe_print.h"
+
 /* kretprobe inode_permission entry */
 KRETPROBE_ENTRY_HANDLER_DEFINE2(inode_permission, int *, private,
 				struct inode *, inode, int, mask)
@@ -23,7 +26,7 @@ KRETPROBE_ENTRY_HANDLER_DEFINE2(inode_permission, int *, private,
 /* kretprobe inode_permission return */
 KRETPROBE_RET_HANDLER_DEFINE(inode_permission, int *, mask, int, retval)
 {
-	kprobe_printk("mask: 0x%x, retval: %d\n", *mask, retval);
+	inode_permission_print(*mask, retval);
 	return 0;
 }
 
@@ -55,8 +58,5 @@ TRACEPOINT_HANDLER_DEFINE(signal_generate,
 		"lose_info",
 	};
 
-	kprobe_printk("%s(%d) send signal(%d) to %s %s(%d) with %s\n",
-		      current->comm, current->pid, sig,
-		      group ? "group" : "single", task->comm, task->pid,
-		      result_name[result]);
+	signal_generate_print(sig, task, group, result_name[result]);
 }

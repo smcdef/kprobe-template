@@ -7,6 +7,7 @@ ifneq ($(KERNELRELEASE),)
 obj-m			:= $(MODULE_NAME).o
 $(MODULE_NAME)-m	:= init.o
 $(MODULE_NAME)-m	+= kprobe.o
+$(MODULE_NAME)-m	+= $(patsubst $(PWD)/%.c,%.o, $(wildcard $(PWD)/trace/*.c))
 ldflags-y		+= -r -T $(PWD)/kprobe.lds
 
 name-fix   = $(squote)$(quote)$(subst $(comma),_,$(subst -,_,$1))$(quote)$(squote)
