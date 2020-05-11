@@ -18,6 +18,9 @@ extern struct kretprobe * const __stop_kretprobe_template[];
 extern struct tracepoint_entry * const __start_tracepoint_template[];
 extern struct tracepoint_entry * const __stop_tracepoint_template[];
 
+extern struct kprobe_initcall const * const __start_kprobe_initcall[];
+extern struct kprobe_initcall const * const __stop_kprobe_initcall[];
+
 static inline int num_tracepoint(void)
 {
 	return __stop_tracepoint_template - __start_tracepoint_template;
@@ -192,6 +195,46 @@ static void kprobe_unregister_tracepoints(void)
 	}
 }
 
+static int __init do_kprobe_initcalls(void)
+{
+	int ret = 0;
+	struct kprobe_initcall const * const *initcall_p;
+
+	for (initcall_p = __start_kprobe_initcall;
+	     initcall_p < __stop_kprobe_initcall; initcall_p++) {
+		struct kprobe_initcall const *initcall = *initcall_p;
+
+		if (initcall->init) {
+			ret = initcall->init();
+			if (ret < 0)
+				goto exit;
+		}
+	}
+
+	return 0;
+exit:
+	while (--initcall_p >= __start_kprobe_initcall) {
+		struct kprobe_initcall const *initcall = *initcall_p;
+
+		if (initcall->exit)
+			initcall->exit();
+	}
+
+	return ret;
+}
+
+static void do_kprobe_exitcalls(void)
+{
+	struct kprobe_initcall const * const *initcall_p = __stop_kprobe_initcall;
+
+	while (--initcall_p >= __start_kprobe_initcall) {
+		struct kprobe_initcall const *initcall = *initcall_p;
+
+		if (initcall->exit)
+			initcall->exit();
+	}
+}
+
 static int __init kprobes_init(void)
 {
 	int ret;
@@ -205,9 +248,13 @@ static int __init kprobes_init(void)
 			return -ENODEV;
 	}
 
-	ret = kprobe_register_kprobes();
+	ret = do_kprobe_initcalls();
 	if (ret < 0)
 		return ret;
+
+	ret = kprobe_register_kprobes();
+	if (ret < 0)
+		goto exit;
 
 	ret = kprobe_register_kretprobes();
 	if (ret < 0)
@@ -227,6 +274,8 @@ unregister_kprobes:
 	/* Make sure there is no caller left using the probe. */
 	if (num_tracepoint())
 		tracepoint_synchronize_unregister();
+exit:
+	do_kprobe_exitcalls();
 
 	return ret;
 }
@@ -240,6 +289,8 @@ static void __exit kprobes_exit(void)
 	/* Make sure there is no caller left using the probe. */
 	if (num_tracepoint())
 		tracepoint_synchronize_unregister();
+
+	do_kprobe_exitcalls();
 }
 
 module_init(kprobes_init);

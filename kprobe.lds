@@ -19,5 +19,10 @@ SECTIONS {
 		__start_tracepoint_template = .;
 		KEEP(*(.__tracepoint_template))
 		__stop_tracepoint_template = .;
+
+		. = ALIGN(8);
+		__start_kprobe_initcall = .;
+		KEEP(*(.__kprobe_initcall))
+		__stop_kprobe_initcall = .;
 	}
 }

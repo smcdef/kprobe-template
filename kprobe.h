@@ -349,4 +349,20 @@ struct tracepoint_entry {
 #define kprobe_printk(fmt, ...)	\
 	trace_printk(KBUILD_MODNAME ": " fmt, ##__VA_ARGS__)
 
+struct kprobe_initcall {
+	int (*init)(void);
+	void (*exit)(void);
+};
+
+#define KPROBE_INITCALL(init_func, exit_func)				\
+	static const struct kprobe_initcall init_func##_initcall = {	\
+		.init	= init_func,					\
+		.exit	= exit_func,					\
+	};								\
+									\
+	static const struct kprobe_initcall * const __used		\
+	__##init_func##_initcall					\
+	__attribute__((section(".__kprobe_initcall"))) =		\
+		&init_func##_initcall
+
 #endif /* __KPROBE_TEMPLATE_H */
