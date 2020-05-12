@@ -10,6 +10,7 @@ $(MODULE_NAME)-m	:= init.o
 $(MODULE_NAME)-m	+= kprobe.o
 $(MODULE_NAME)-m	+= $(patsubst $(PWD)/%.c,%.o, $(wildcard $(PWD)/trace/*.c))
 ldflags-y		+= -r -T $(PWD)/kprobe.lds
+ccflags-y		+= -I$(PWD)/include
 
 name-fix   = $(squote)$(quote)$(subst $(comma),_,$(subst -,_,$1))$(quote)$(squote)
 ccflags-y += -DCONFIG_MODULE_AUTHOR=$(call name-fix,$(MODULE_AUTHOR))

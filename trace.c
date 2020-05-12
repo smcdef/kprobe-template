@@ -8,9 +8,8 @@
 #include <linux/ring_buffer.h>
 #include <linux/slab.h>
 #include <linux/trace_events.h>
-
 #include "trace.h"
-#include "../kprobe.h"
+#include "kprobe.h"
 
 #define PROC_NAME	"tracing"
 

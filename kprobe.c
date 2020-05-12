@@ -9,7 +9,7 @@
 #include "kprobe.h"
 
 #define CREATE_PRINT_EVENT
-#include "trace/kprobe_print.h"
+#include "kprobe_print.h"
 
 /* kretprobe inode_permission entry */
 KRETPROBE_ENTRY_HANDLER_DEFINE2(inode_permission, int *, private,
