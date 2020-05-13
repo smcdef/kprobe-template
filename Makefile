@@ -19,13 +19,13 @@ ccflags-y += -DCONFIG_MODULE_LICENSE=$(call name-fix,$(MODULE_LICENSE))
 else
 PWD			:= $(shell pwd)
 KERNEL_HEAD		:= $(shell uname -r)
-KERNELDIR		:= /lib/modules/$(KERNEL_HEAD)/build
+KERNEL_DIR		:= /lib/modules/$(KERNEL_HEAD)/build
 
 all:
-	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
+	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
 
 clean:
-	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
+	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) clean
 
 install:
 	insmod $(MODULE_NAME).ko
