@@ -7,7 +7,7 @@ MODULE_DESCRIPTION	:= Kprobe template for easy register kernel probes
 ifneq ($(KERNELRELEASE),)
 obj-m			:= $(MODULE_NAME).o
 $(MODULE_NAME)-m	:= init.o
-$(MODULE_NAME)-m	+= kprobe.o
+$(MODULE_NAME)-m	+= kprobe.o trace.o
 ldflags-y		+= -r -T $(PWD)/kprobe.lds
 ccflags-y		+= -I$(PWD)/include
 
