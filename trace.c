@@ -312,10 +312,15 @@ static const struct file_operations trace_pipe_fops = {
 	.llseek		= no_llseek,
 };
 
+static inline int num_print_event_class(void)
+{
+	return __stop_print_event_class - __start_print_event_class;
+}
+
 static int __init print_event_init(void)
 {
 	int id = 0;
-	int num_class = __stop_print_event_class - __start_print_event_class;
+	int num_class = num_print_event_class();
 	struct print_event_class * const *class_ptr;
 	struct proc_dir_entry *parent_dir;
 
@@ -360,6 +365,8 @@ free:
 
 static void print_event_exit(void)
 {
+	if (num_print_event_class() == 0)
+		return;
 	remove_proc_subtree(PROC_NAME, NULL);
 	ring_buffer_free(ring_buffer);
 }
