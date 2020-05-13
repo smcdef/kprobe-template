@@ -4,6 +4,8 @@
  *
  * The ring buffer based tracing information store.
  */
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+
 #include <linux/proc_fs.h>
 #include <linux/ring_buffer.h>
 #include <linux/slab.h>
@@ -352,6 +354,7 @@ static int __init print_event_init(void)
 		class->id = id++;
 		class->buffer = ring_buffer;
 	}
+	pr_info("create %d print event class\n", num_class);
 
 	return 0;
 
@@ -365,10 +368,14 @@ free:
 
 static void print_event_exit(void)
 {
-	if (num_print_event_class() == 0)
+	int num_class = num_print_event_class();
+
+	if (num_class == 0)
 		return;
 	remove_proc_subtree(PROC_NAME, NULL);
 	ring_buffer_free(ring_buffer);
+
+	pr_info("destroy %d print event class\n", num_class);
 }
 
 KPROBE_INITCALL(print_event_init, print_event_exit);
