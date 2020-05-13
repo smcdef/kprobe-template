@@ -28,9 +28,9 @@ clean:
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) clean
 
 install:
-	insmod $(MODULE_NAME).ko
+	sudo insmod $(MODULE_NAME).ko
 
 remove:
-	rmmod $(MODULE_NAME)
+	sudo rmmod $(MODULE_NAME)
 
 endif
