@@ -295,6 +295,8 @@ static void __exit kprobes_exit(void)
 
 module_init(kprobes_init);
 module_exit(kprobes_exit);
+
+MODULE_INFO(homepage, "https://github.com/smcdef/kprobe-template");
 MODULE_VERSION(CONFIG_MODULE_VERSION);
 MODULE_LICENSE(CONFIG_MODULE_LICENSE);
 MODULE_AUTHOR(CONFIG_MODULE_AUTHOR);
