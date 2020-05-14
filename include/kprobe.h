@@ -21,6 +21,8 @@
 #define __KPROBE_MAP4(m, t, a, ...) m(t, a), __KPROBE_MAP3(m, __VA_ARGS__)
 #define __KPROBE_MAP5(m, t, a, ...) m(t, a), __KPROBE_MAP4(m, __VA_ARGS__)
 #define __KPROBE_MAP6(m, t, a, ...) m(t, a), __KPROBE_MAP5(m, __VA_ARGS__)
+#define __KPROBE_MAP7(m, t, a, ...) m(t, a), __KPROBE_MAP6(m, __VA_ARGS__)
+#define __KPROBE_MAP8(m, t, a, ...) m(t, a), __KPROBE_MAP7(m, __VA_ARGS__)
 #define __KPROBE_MAP(n, ...) __KPROBE_MAP##n(__VA_ARGS__)
 
 #define __KPROBE_TYPE_AS(t, v)	__same_type((__force t)0, v)
@@ -49,7 +51,8 @@
 #define SC_ARCH_REGS_TO_ARGS(x, ...)					\
 	__KPROBE_MAP(x,__KPROBE_ARGS					\
 		     ,,regs->regs[0],,regs->regs[1],,regs->regs[2]	\
-		     ,,regs->regs[3],,regs->regs[4],,regs->regs[5])
+		     ,,regs->regs[3],,regs->regs[4],,regs->regs[5]	\
+		     ,,regs->regs[6],,regs->regs[7])
 
 #define arg0(pt_regs)	((pt_regs)->regs[0])
 #define arg1(pt_regs)	((pt_regs)->regs[1])
@@ -57,6 +60,8 @@
 #define arg3(pt_regs)	((pt_regs)->regs[3])
 #define arg4(pt_regs)	((pt_regs)->regs[4])
 #define arg5(pt_regs)	((pt_regs)->regs[5])
+#define arg6(pt_regs)	((pt_regs)->regs[6])
+#define arg7(pt_regs)	((pt_regs)->regs[7])
 #else
 #error "Unsupported architecture"
 #endif
@@ -317,6 +322,13 @@ struct tracepoint_entry {
 #define KRETPROBE_ENTRY_HANDLER_DEFINE6(func, type, arg, ...) \
 	__KRETPROBE_ENTRY_HANDLER_DEFINE_x(6, func, type, arg, __VA_ARGS__)
 
+#ifdef CONFIG_ARM64
+#define KRETPROBE_ENTRY_HANDLER_DEFINE7(func, type, arg, ...) \
+	__KRETPROBE_ENTRY_HANDLER_DEFINE_x(7, func, type, arg, __VA_ARGS__)
+#define KRETPROBE_ENTRY_HANDLER_DEFINE8(func, type, arg, ...) \
+	__KRETPROBE_ENTRY_HANDLER_DEFINE_x(8, func, type, arg, __VA_ARGS__)
+#endif
+
 #define KRETPROBE_ENTRY_HANDLER_DEFINE_OFFSET(func, offset, type, arg, ...) \
 	__KRETPROBE_ENTRY_HANDLER_DEFINE_OFFSET(func, offset, type, arg, __VA_ARGS__)
 
@@ -338,6 +350,13 @@ struct tracepoint_entry {
 	__KPROBE_HANDLER_DEFINE_x(5, function, __VA_ARGS__)
 #define KPROBE_HANDLER_DEFINE6(function, ...) \
 	__KPROBE_HANDLER_DEFINE_x(6, function, __VA_ARGS__)
+
+#ifdef CONFIG_ARM64
+#define KPROBE_HANDLER_DEFINE7(function, ...) \
+	__KPROBE_HANDLER_DEFINE_x(7, function, __VA_ARGS__)
+#define KPROBE_HANDLER_DEFINE8(function, ...) \
+	__KPROBE_HANDLER_DEFINE_x(8, function, __VA_ARGS__)
+#endif
 
 #define KPROBE_HANDLER_DEFINE_OFFSET(func, offset, ...) \
 	__KPROBE_HANDLER_DEFINE_OFFSET(func, offset, __VA_ARGS__)
