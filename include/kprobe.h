@@ -9,7 +9,6 @@
 
 #include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/syscalls.h>
 #include <linux/kprobes.h>
 #include <linux/tracepoint.h>
 #include <asm/irq_regs.h>
