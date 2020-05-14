@@ -14,11 +14,30 @@
 #include <linux/tracepoint.h>
 #include <asm/irq_regs.h>
 
+#define __KPROBE_MAP0(m, ...)
+#define __KPROBE_MAP1(m, t, a, ...) m(t, a)
+#define __KPROBE_MAP2(m, t, a, ...) m(t, a), __KPROBE_MAP1(m, __VA_ARGS__)
+#define __KPROBE_MAP3(m, t, a, ...) m(t, a), __KPROBE_MAP2(m, __VA_ARGS__)
+#define __KPROBE_MAP4(m, t, a, ...) m(t, a), __KPROBE_MAP3(m, __VA_ARGS__)
+#define __KPROBE_MAP5(m, t, a, ...) m(t, a), __KPROBE_MAP4(m, __VA_ARGS__)
+#define __KPROBE_MAP6(m, t, a, ...) m(t, a), __KPROBE_MAP5(m, __VA_ARGS__)
+#define __KPROBE_MAP(n, ...) __KPROBE_MAP##n(__VA_ARGS__)
+
+#define __KPROBE_TYPE_AS(t, v)	__same_type((__force t)0, v)
+#define __KPROBE_TYPE_IS_LL(t)	(__KPROBE_TYPE_AS(t, 0LL) || __KPROBE_TYPE_AS(t, 0ULL))
+#define __KPROBE_DECL(t, a)	t a
+#define __KPROBE_CAST(t, a)	(__force t) a
+#define __KPROBE_ARGS(t, a)	a
+#define __KPROBE_LONG(t, a)	\
+	__typeof(__builtin_choose_expr(__KPROBE_TYPE_IS_LL(t), 0LL, 0L)) a
+#define __KPROBE_TEST(t, a)	\
+	(void)BUILD_BUG_ON_ZERO(!__KPROBE_TYPE_IS_LL(t) && sizeof(t) > sizeof(long))
+
 #if defined(CONFIG_X86_64)
 #define SC_ARCH_REGS_TO_ARGS(x, ...)					\
-	__MAP(x,__SC_ARGS						\
-	      ,,regs->di,,regs->si,,regs->dx				\
-	      ,,regs->r10,,regs->r8,,regs->r9)
+	__KPROBE_MAP(x,__KPROBE_ARGS					\
+		     ,,regs->di,,regs->si,,regs->dx			\
+		     ,,regs->r10,,regs->r8,,regs->r9)
 
 #define arg0(pt_regs)	((pt_regs)->di)
 #define arg1(pt_regs)	((pt_regs)->si)
@@ -28,9 +47,9 @@
 #define arg5(pt_regs)	((pt_regs)->r9)
 #elif defined(CONFIG_ARM64)
 #define SC_ARCH_REGS_TO_ARGS(x, ...)					\
-	__MAP(x,__SC_ARGS						\
-	      ,,regs->regs[0],,regs->regs[1],,regs->regs[2]		\
-	      ,,regs->regs[3],,regs->regs[4],,regs->regs[5])
+	__KPROBE_MAP(x,__KPROBE_ARGS					\
+		     ,,regs->regs[0],,regs->regs[1],,regs->regs[2]	\
+		     ,,regs->regs[3],,regs->regs[4],,regs->regs[5])
 
 #define arg0(pt_regs)	((pt_regs)->regs[0])
 #define arg1(pt_regs)	((pt_regs)->regs[1])
@@ -85,10 +104,10 @@ struct tracepoint_entry {
 
 #define __KPROBE_HANDLER_DEFINE_x(x, name, ...)				\
 	__KPROBE_HANDLER_DEFINE_COMM(name, 0)				\
-	static inline int __se_##name##_handler(__MAP(x, __SC_LONG,	\
-						      __VA_ARGS__));	\
-	static inline int __do_##name##_handler(__MAP(x, __SC_DECL,	\
-						      __VA_ARGS__));	\
+	static inline int __se_##name##_handler(__KPROBE_MAP(x,		\
+			__KPROBE_LONG, __VA_ARGS__));			\
+	static inline int __do_##name##_handler(__KPROBE_MAP(x,		\
+			__KPROBE_DECL, __VA_ARGS__));			\
 	static int name##_handler(struct kprobe *p,			\
 				  struct pt_regs *regs)			\
 	{								\
@@ -96,16 +115,16 @@ struct tracepoint_entry {
 							__VA_ARGS__));	\
 	}								\
 									\
-	static inline int __se_##name##_handler(__MAP(x, __SC_LONG,	\
-							 __VA_ARGS__))	\
+	static inline int __se_##name##_handler(__KPROBE_MAP(x,		\
+			__KPROBE_LONG, __VA_ARGS__))			\
 	{								\
-		int ret = __do_##name##_handler(__MAP(x, __SC_CAST,	\
-						      __VA_ARGS__));	\
-		__MAP(x, __SC_TEST, __VA_ARGS__);			\
+		int ret = __do_##name##_handler(__KPROBE_MAP(x,		\
+				__KPROBE_CAST, __VA_ARGS__));		\
+		__KPROBE_MAP(x, __KPROBE_TEST, __VA_ARGS__);		\
 		return ret;						\
 	}								\
-	static inline int __do_##name##_handler(__MAP(x, __SC_DECL,	\
-						      __VA_ARGS__))
+	static inline int __do_##name##_handler(__KPROBE_MAP(x,		\
+			__KPROBE_DECL, __VA_ARGS__))
 
 #define __KPROBE_HANDLER_DEFINE0(function)				\
 	__KPROBE_HANDLER_DEFINE_COMM(function, 0)			\
@@ -119,26 +138,26 @@ struct tracepoint_entry {
 
 #define __KPROBE_HANDLER_DEFINE_OFFSET(func, offset, ...)		\
 	__KPROBE_HANDLER_DEFINE_COMM(func, offset)			\
-	static inline int __se_##func##_handler(__MAP(1, __SC_DECL,	\
-			__VA_ARGS__));					\
-	static inline int __do_##func##_handler(__MAP(1, __SC_DECL,	\
-			__VA_ARGS__));					\
+	static inline int __se_##func##_handler(__KPROBE_MAP(1,		\
+			__KPROBE_DECL, __VA_ARGS__));			\
+	static inline int __do_##func##_handler(__KPROBE_MAP(1,		\
+			__KPROBE_DECL, __VA_ARGS__));			\
 	static int func##_handler(struct kprobe *p,			\
 				  struct pt_regs *regs)			\
 	{								\
 		return __se_##func##_handler(regs);			\
 	}								\
 									\
-	static inline int __se_##func##_handler(__MAP(1, __SC_DECL,	\
-			__VA_ARGS__))					\
+	static inline int __se_##func##_handler(__KPROBE_MAP(1,		\
+			__KPROBE_DECL, __VA_ARGS__))			\
 	{								\
-		int ret = __do_##func##_handler(__MAP(1, __SC_CAST,	\
-				__VA_ARGS__));				\
-		__MAP(1, __SC_TEST, __VA_ARGS__);			\
+		int ret = __do_##func##_handler(__KPROBE_MAP(1,		\
+				__KPROBE_CAST, __VA_ARGS__));		\
+		__KPROBE_MAP(1, __KPROBE_TEST, __VA_ARGS__);		\
 		return ret;						\
 	}								\
-	static inline int __do_##func##_handler(__MAP(1, __SC_DECL,	\
-			__VA_ARGS__))
+	static inline int __do_##func##_handler(__KPROBE_MAP(1,		\
+			__KPROBE_DECL, __VA_ARGS__))
 
 /* kretprobe macro */
 #define __KRETPROBE_ENTRY_HANDLER_DEFINE_COMM(name, type, off)		\
@@ -188,9 +207,9 @@ struct tracepoint_entry {
 #define __KRETPROBE_ENTRY_HANDLER_DEFINE_x(x, name, type, arg, ...)	\
 	__KRETPROBE_ENTRY_HANDLER_DEFINE_COMM(name, type, 0)		\
 	static inline int __se_##name##_entry_handler(type arg, 	\
-			__MAP(x, __SC_LONG, __VA_ARGS__));		\
+			__KPROBE_MAP(x, __KPROBE_LONG, __VA_ARGS__));	\
 	static inline int __do_##name##_entry_handler(type arg, 	\
-			__MAP(x, __SC_DECL, __VA_ARGS__));		\
+			__KPROBE_MAP(x, __KPROBE_DECL, __VA_ARGS__));	\
 	static int name##_entry_handler(struct kretprobe_instance *ri,	\
 					struct pt_regs *regs)		\
 	{								\
@@ -199,21 +218,22 @@ struct tracepoint_entry {
 	}								\
 									\
 	static inline int __se_##name##_entry_handler(type arg,		\
-			__MAP(x, __SC_LONG, __VA_ARGS__))		\
+			__KPROBE_MAP(x, __KPROBE_LONG, __VA_ARGS__))	\
 	{								\
 		int ret = __do_##name##_entry_handler(arg,		\
-				__MAP(x, __SC_CAST, __VA_ARGS__));	\
-		__MAP(x, __SC_TEST, __VA_ARGS__);			\
+				__KPROBE_MAP(x, __KPROBE_CAST,		\
+					     __VA_ARGS__));		\
+		__KPROBE_MAP(x, __KPROBE_TEST, __VA_ARGS__);		\
 		return ret;						\
 	}								\
 	static inline int __do_##name##_entry_handler(type arg,		\
-			__MAP(x, __SC_DECL, __VA_ARGS__))
+			__KPROBE_MAP(x, __KPROBE_DECL, __VA_ARGS__))
 
 #define __KRETPROBE_RET_HANDLER_DEFINE(func, ...)			\
-	static inline int __se_##func##_ret_handler(__MAP(2, __SC_LONG,	\
-			__VA_ARGS__));					\
-	static inline int __do_##func##_ret_handler(__MAP(2, __SC_DECL,	\
-			__VA_ARGS__));					\
+	static inline int __se_##func##_ret_handler(__KPROBE_MAP(2,	\
+			__KPROBE_LONG, __VA_ARGS__));			\
+	static inline int __do_##func##_ret_handler(__KPROBE_MAP(2,	\
+			__KPROBE_DECL, __VA_ARGS__));			\
 	static int func##_ret_handler(struct kretprobe_instance *ri,	\
 				      struct pt_regs *regs)		\
 	{								\
@@ -221,23 +241,23 @@ struct tracepoint_entry {
 				(long)regs_return_value(regs));		\
 	}								\
 									\
-	static inline int __se_##func##_ret_handler(__MAP(2, __SC_LONG,	\
-			__VA_ARGS__))					\
+	static inline int __se_##func##_ret_handler(__KPROBE_MAP(2,	\
+			__KPROBE_LONG, __VA_ARGS__))			\
 	{								\
-		int ret = __do_##func##_ret_handler(__MAP(2, __SC_CAST,	\
-				__VA_ARGS__));				\
-		__MAP(2, __SC_TEST, __VA_ARGS__);			\
+		int ret = __do_##func##_ret_handler(__KPROBE_MAP(2,	\
+				__KPROBE_CAST, __VA_ARGS__));		\
+		__KPROBE_MAP(2, __KPROBE_TEST, __VA_ARGS__);		\
 		return ret;						\
 	}								\
-	static inline int __do_##func##_ret_handler(__MAP(2, __SC_DECL,	\
-			__VA_ARGS__))
+	static inline int __do_##func##_ret_handler(__KPROBE_MAP(2,	\
+			__KPROBE_DECL, __VA_ARGS__))
 
 #define __KRETPROBE_ENTRY_HANDLER_DEFINE_OFFSET(func, offset, type, arg, ...) \
 	__KRETPROBE_ENTRY_HANDLER_DEFINE_COMM(func, type, offset)	\
 	static inline int __se_##func##_entry_handler(type arg, 	\
-			__MAP(1, __SC_DECL, __VA_ARGS__));		\
+			__KPROBE_MAP(1, __KPROBE_DECL, __VA_ARGS__));	\
 	static inline int __do_##func##_entry_handler(type arg, 	\
-			__MAP(1, __SC_DECL, __VA_ARGS__));		\
+			__KPROBE_MAP(1, __KPROBE_DECL, __VA_ARGS__));	\
 	static int func##_entry_handler(struct kretprobe_instance *ri,	\
 					struct pt_regs *regs)		\
 	{								\
@@ -246,15 +266,16 @@ struct tracepoint_entry {
 	}								\
 									\
 	static inline int __se_##func##_entry_handler(type arg,		\
-			__MAP(1, __SC_DECL, __VA_ARGS__))		\
+			__KPROBE_MAP(1, __KPROBE_DECL, __VA_ARGS__))	\
 	{								\
 		int ret = __do_##func##_entry_handler(arg,		\
-				__MAP(1, __SC_CAST, __VA_ARGS__));	\
-		__MAP(1, __SC_TEST, __VA_ARGS__);			\
+				__KPROBE_MAP(1, __KPROBE_CAST,		\
+					     __VA_ARGS__));		\
+		__KPROBE_MAP(1, __KPROBE_TEST, __VA_ARGS__);		\
 		return ret;						\
 	}								\
 	static inline int __do_##func##_entry_handler(type arg,		\
-			__MAP(1, __SC_DECL, __VA_ARGS__))
+			__KPROBE_MAP(1, __KPROBE_DECL, __VA_ARGS__))
 
 #define __KRETPROBE_ENTRY_HANDLER_DEFINE0(func, type, arg)		\
 	__KRETPROBE_ENTRY_HANDLER_DEFINE_COMM(func, type)		\
