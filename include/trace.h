@@ -5,6 +5,8 @@
 #include <linux/kernel.h>
 #include <linux/trace_seq.h>
 #include <linux/sizes.h>
+#include <linux/ring_buffer.h>
+#include <linux/trace_events.h>
 
 /*
  * The print entry - the most basic unit of tracing.

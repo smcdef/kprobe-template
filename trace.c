@@ -7,9 +7,7 @@
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <linux/proc_fs.h>
-#include <linux/ring_buffer.h>
 #include <linux/slab.h>
-#include <linux/trace_events.h>
 #include "trace.h"
 #include "kprobe.h"
 
