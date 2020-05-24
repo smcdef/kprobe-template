@@ -29,31 +29,19 @@ struct print_event_iterator {
 	/* All new field here will be zeroed out in pipe_read */
 };
 
-static struct ring_buffer *ring_buffer;
-
 /* Defined in linker script */
 extern struct print_event_class * const __start_print_event_class[];
 extern struct print_event_class * const __stop_print_event_class[];
 
-static int (*ring_buffer_wait_sym)(struct ring_buffer *buffer,
-				   int cpu, bool full);
-static __poll_t (*ring_buffer_poll_wait_sym)(struct ring_buffer *buffer,
-					     int cpu, struct file *filp,
-					     poll_table *poll_table);
+static struct ring_buffer *ring_buffer;
+static int (*ring_buffer_waiting)(struct ring_buffer *buffer, int cpu,
+				  bool full);
 
 static int kallsyms_lookup_symbols(void)
 {
-	void *ptr = (void *)kallsyms_lookup_name("ring_buffer_wait");
-	if (!ptr)
-		return -ENODEV;
-	ring_buffer_wait_sym = ptr;
+	ring_buffer_waiting = (void *)kallsyms_lookup_name("ring_buffer_wait");
 
-	ptr = (void *)kallsyms_lookup_name("ring_buffer_poll_wait");
-	if (!ptr)
-		return -ENODEV;
-	ring_buffer_poll_wait_sym = ptr;
-
-	return 0;
+	return ring_buffer_waiting ? 0 : -ENODEV;
 }
 
 static int trace_open_pipe(struct inode *inode, struct file *filp)
@@ -71,14 +59,6 @@ static int trace_open_pipe(struct inode *inode, struct file *filp)
 	nonseekable_open(inode, filp);
 
 	return 0;
-}
-
-static __poll_t trace_poll_pipe(struct file *filp, poll_table *poll_table)
-{
-	struct print_event_iterator *iter = filp->private_data;
-
-	return ring_buffer_poll_wait_sym(iter->buffer, RING_BUFFER_ALL_CPUS,
-					 filp, poll_table);
 }
 
 static int is_trace_empty(struct print_event_iterator *iter)
@@ -106,8 +86,8 @@ static int trace_wait_pipe(struct file *filp)
 
 		mutex_unlock(&iter->mutex);
 
-		ret = ring_buffer_wait_sym(iter->buffer, RING_BUFFER_ALL_CPUS,
-					   false);
+		ret = ring_buffer_waiting(iter->buffer, RING_BUFFER_ALL_CPUS,
+					  false);
 
 		mutex_lock(&iter->mutex);
 
@@ -306,7 +286,6 @@ static int trace_release_pipe(struct inode *inode, struct file *file)
 static const struct file_operations trace_pipe_fops = {
 	.owner		= THIS_MODULE,
 	.open		= trace_open_pipe,
-	.poll		= trace_poll_pipe,
 	.read		= trace_read_pipe,
 	.release	= trace_release_pipe,
 	.llseek		= no_llseek,
