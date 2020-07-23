@@ -38,12 +38,12 @@
 #define SC_ARCH_REGS_TO_ARGS(x, ...)					\
 	__KPROBE_MAP(x,__KPROBE_ARGS					\
 		     ,,regs->di,,regs->si,,regs->dx			\
-		     ,,regs->r10,,regs->r8,,regs->r9)
+		     ,,regs->cx,,regs->r8,,regs->r9)
 
 #define arg0(pt_regs)	((pt_regs)->di)
 #define arg1(pt_regs)	((pt_regs)->si)
 #define arg2(pt_regs)	((pt_regs)->dx)
-#define arg3(pt_regs)	((pt_regs)->r10)
+#define arg3(pt_regs)	((pt_regs)->cx)
 #define arg4(pt_regs)	((pt_regs)->r8)
 #define arg5(pt_regs)	((pt_regs)->r9)
 #elif defined(CONFIG_ARM64)
