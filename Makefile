@@ -1,4 +1,4 @@
-MODULE_NAME		:= kprobes
+MODULE_NAME		:= kmemleak
 MODULE_LICENSE		:= GPL
 MODULE_VERSION		:= 1.0
 MODULE_AUTHOR		:= Muchun Song <songmuchun@bytedance.com>
