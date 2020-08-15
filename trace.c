@@ -4,7 +4,7 @@
  *
  * The ring buffer based tracing information store.
  */
-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+#define pr_fmt(fmt) CONFIG_MODULE_NAME ": " fmt
 
 #include <linux/proc_fs.h>
 #include <linux/slab.h>

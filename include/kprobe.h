@@ -386,7 +386,7 @@ struct tracepoint_entry {
  *     cat /sys/kernel/debug/tracing/trace_pipe
  */
 #define kprobe_printk(fmt, ...)	\
-	trace_printk(KBUILD_MODNAME ": " fmt, ##__VA_ARGS__)
+	trace_printk(CONFIG_MODULE_NAME ": " fmt, ##__VA_ARGS__)
 
 struct kprobe_initcall {
 	int (*init)(void);

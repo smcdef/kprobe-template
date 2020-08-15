@@ -12,6 +12,7 @@ ldflags-y		+= -r -T $(KBUILD_EXTMOD)/kprobe.lds
 ccflags-y		+= -I$(KBUILD_EXTMOD)/include
 
 name-fix   = $(squote)$(quote)$(subst $(comma),_,$(subst -,_,$1))$(quote)$(squote)
+ccflags-y += -DCONFIG_MODULE_NAME=$(call name-fix,$(MODULE_NAME))
 ccflags-y += -DCONFIG_MODULE_AUTHOR=$(call name-fix,$(MODULE_AUTHOR))
 ccflags-y += -DCONFIG_MODULE_VERSION=$(call name-fix,$(MODULE_VERSION))
 ccflags-y += -DCONFIG_MODULE_DESCRIPTION=$(call name-fix,$(MODULE_DESCRIPTION))
