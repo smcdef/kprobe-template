@@ -211,6 +211,9 @@ static ssize_t trace_read_pipe(struct file *filp, char __user *ubuf,
 	trace_seq_init(&iter->seq);
 
 waitagain:
+	if (fatal_signal_pending(current))
+		goto out;
+
 	sret = trace_wait_pipe(filp);
 	if (sret <= 0)
 		goto out;
@@ -226,6 +229,7 @@ waitagain:
 
 	memset(&iter->seq, 0,
 	       sizeof(*iter) - offsetof(struct print_event_iterator, seq));
+	trace_seq_init(&iter->seq);
 
 	mutex_lock(&access_lock);
 	while (trace_next_entry_inc(iter) != NULL) {
