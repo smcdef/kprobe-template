@@ -51,6 +51,33 @@ static void __init tracepoint_lookup(struct tracepoint *tp, void *priv)
 	}
 }
 
+static int __init tracepoint_lookup_all(void)
+{
+	int initalized = 0;
+
+	if (!num_tracepoint())
+		return 0;
+
+	/* Lookup for the tracepoint that we want to register */
+	for_each_kernel_tracepoint(tracepoint_lookup, &initalized);
+	if (!is_tracepoint_lookup_finshed(initalized)) {
+		struct tracepoint_entry * const *tracepoint_ptr;
+
+		for (tracepoint_ptr = __start_tracepoint_template;
+		     tracepoint_ptr < __stop_tracepoint_template;
+		     tracepoint_ptr++) {
+			struct tracepoint_entry *tracepoint = *tracepoint_ptr;
+
+			if (!tracepoint->tp)
+				pr_err("can not lookup the tracepoint of trace_%s\n",
+				       tracepoint->name);
+		}
+		return -ENODEV;
+	}
+
+	return 0;
+}
+
 static int __init kprobe_register_kprobes(void)
 {
 	int ret;
@@ -239,14 +266,9 @@ static int __init kprobes_init(void)
 {
 	int ret;
 
-	if (num_tracepoint()) {
-		int tp_initalized = 0;
-
-		/* Lookup for the tracepoint that we needed */
-		for_each_kernel_tracepoint(tracepoint_lookup, &tp_initalized);
-		if (!is_tracepoint_lookup_finshed(tp_initalized))
-			return -ENODEV;
-	}
+	ret = tracepoint_lookup_all();
+	if (ret)
+		return ret;
 
 	ret = do_kprobe_initcalls();
 	if (ret < 0)
