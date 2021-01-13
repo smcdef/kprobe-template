@@ -86,11 +86,15 @@ static int __init kprobe_register_kprobes(void)
 	for (kprobe_ptr = __start_kprobe_template;
 	     kprobe_ptr < __stop_kprobe_template; kprobe_ptr++) {
 		struct kprobe *kprobe = *kprobe_ptr;
+		const char *name = kprobe->symbol_name;
+
+		if (kprobe->addr)
+			kprobe->symbol_name = NULL;
 
 		ret = register_kprobe(kprobe);
 		if (ret < 0) {
 			pr_err("kprobe register fail at %s+%x returned %d\n",
-				kprobe->symbol_name, kprobe->offset, ret);
+				name, kprobe->offset, ret);
 			goto unregister_kprobes;
 		} else {
 			pr_info("kprobe register at %pS\n", kprobe->addr);

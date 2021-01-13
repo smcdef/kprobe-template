@@ -73,11 +73,12 @@ struct tracepoint_entry {
 };
 
 /* kprobe macro */
-#define __KPROBE_HANDLER_DEFINE_COMM(name, off)				\
+#define __KPROBE_HANDLER_DEFINE_COMM(name, sym_addr, off)		\
 	static int name##_handler(struct kprobe *p,			\
 				  struct pt_regs *regs);		\
 	static struct kprobe name##_kprobe = {				\
 		.symbol_name	= #name,				\
+		.addr		= (void *)sym_addr,			\
 		.offset		= off,					\
 		.pre_handler	= name##_handler			\
 	};								\
@@ -88,6 +89,9 @@ struct tracepoint_entry {
 	static inline int __init name##_register(void)			\
 	{								\
 		int ret;						\
+									\
+		if (sym_addr)						\
+			name##_kprobe.symbol_name = NULL;		\
 									\
 		ret = register_kprobe(&name##_kprobe);			\
 		if (ret < 0)						\
@@ -106,8 +110,8 @@ struct tracepoint_entry {
 			name##_kprobe.addr);				\
 	}
 
-#define __KPROBE_HANDLER_DEFINE_x(x, name, ...)				\
-	__KPROBE_HANDLER_DEFINE_COMM(name, 0)				\
+#define __KPROBE_HANDLER_DEFINE_x(x, name, sym_addr, ...)		\
+	__KPROBE_HANDLER_DEFINE_COMM(name, sym_addr, 0)			\
 	static inline int __se_##name##_handler(__KPROBE_MAP(x,		\
 			__KPROBE_LONG, __VA_ARGS__));			\
 	static inline int __do_##name##_handler(__KPROBE_MAP(x,		\
@@ -130,8 +134,8 @@ struct tracepoint_entry {
 	static inline int __do_##name##_handler(__KPROBE_MAP(x,		\
 			__KPROBE_DECL, __VA_ARGS__))
 
-#define __KPROBE_HANDLER_DEFINE0(function)				\
-	__KPROBE_HANDLER_DEFINE_COMM(function, 0)			\
+#define __KPROBE_HANDLER_DEFINE0(function, sym_addr)			\
+	__KPROBE_HANDLER_DEFINE_COMM(function, sym_addr, 0)		\
 	static inline int __do_##function##_handler(void);		\
 	static int function##_handler(struct kprobe *p,			\
 				      struct pt_regs *regs)		\
@@ -140,8 +144,8 @@ struct tracepoint_entry {
 	}								\
 	static inline int __do_##function##_handler(void)
 
-#define __KPROBE_HANDLER_DEFINE_OFFSET(func, offset, ...)		\
-	__KPROBE_HANDLER_DEFINE_COMM(func, offset)			\
+#define __KPROBE_HANDLER_DEFINE_OFFSET(func, sym_addr, offset, ...)	\
+	__KPROBE_HANDLER_DEFINE_COMM(func, sym_addr, offset)		\
 	static inline int __se_##func##_handler(__KPROBE_MAP(1,		\
 			__KPROBE_DECL, __VA_ARGS__));			\
 	static inline int __do_##func##_handler(__KPROBE_MAP(1,		\
@@ -336,29 +340,52 @@ struct tracepoint_entry {
 
 /* The below is the kprobe API for kernel module */
 #define KPROBE_HANDLER_DEFINE0(function)      \
-	__KPROBE_HANDLER_DEFINE0(function)
+	__KPROBE_HANDLER_DEFINE0(function, NULL)
 #define KPROBE_HANDLER_DEFINE1(function, ...) \
-	__KPROBE_HANDLER_DEFINE_x(1, function, __VA_ARGS__)
+	__KPROBE_HANDLER_DEFINE_x(1, function, NULL, __VA_ARGS__)
 #define KPROBE_HANDLER_DEFINE2(function, ...) \
-	__KPROBE_HANDLER_DEFINE_x(2, function, __VA_ARGS__)
+	__KPROBE_HANDLER_DEFINE_x(2, function, NULL, __VA_ARGS__)
 #define KPROBE_HANDLER_DEFINE3(function, ...) \
-	__KPROBE_HANDLER_DEFINE_x(3, function, __VA_ARGS__)
+	__KPROBE_HANDLER_DEFINE_x(3, function, NULL, __VA_ARGS__)
 #define KPROBE_HANDLER_DEFINE4(function, ...) \
-	__KPROBE_HANDLER_DEFINE_x(4, function, __VA_ARGS__)
+	__KPROBE_HANDLER_DEFINE_x(4, function, NULL, __VA_ARGS__)
 #define KPROBE_HANDLER_DEFINE5(function, ...) \
-	__KPROBE_HANDLER_DEFINE_x(5, function, __VA_ARGS__)
+	__KPROBE_HANDLER_DEFINE_x(5, function, NULL, __VA_ARGS__)
 #define KPROBE_HANDLER_DEFINE6(function, ...) \
-	__KPROBE_HANDLER_DEFINE_x(6, function, __VA_ARGS__)
+	__KPROBE_HANDLER_DEFINE_x(6, function, NULL, __VA_ARGS__)
+
+#define KPROBE_HANDLER_SYMADDR_DEFINE0(function, sym_addr)      \
+	__KPROBE_HANDLER_DEFINE0(function, sym_addr)
+#define KPROBE_HANDLER_SYMADDR_DEFINE1(function, sym_addr, ...) \
+	__KPROBE_HANDLER_DEFINE_x(1, function, sym_addr, __VA_ARGS__)
+#define KPROBE_HANDLER_SYMADDR_DEFINE2(function, sym_addr, ...) \
+	__KPROBE_HANDLER_DEFINE_x(2, function, sym_addr, __VA_ARGS__)
+#define KPROBE_HANDLER_SYMADDR_DEFINE3(function, sym_addr, ...) \
+	__KPROBE_HANDLER_DEFINE_x(3, function, sym_addr, __VA_ARGS__)
+#define KPROBE_HANDLER_SYMADDR_DEFINE4(function, sym_addr, ...) \
+	__KPROBE_HANDLER_DEFINE_x(4, function, sym_addr, __VA_ARGS__)
+#define KPROBE_HANDLER_SYMADDR_DEFINE5(function, sym_addr, ...) \
+	__KPROBE_HANDLER_DEFINE_x(5, function, sym_addr, __VA_ARGS__)
+#define KPROBE_HANDLER_SYMADDR_DEFINE6(function, sym_addr, ...) \
+	__KPROBE_HANDLER_DEFINE_x(6, function, sym_addr, __VA_ARGS__)
 
 #ifdef CONFIG_ARM64
 #define KPROBE_HANDLER_DEFINE7(function, ...) \
-	__KPROBE_HANDLER_DEFINE_x(7, function, __VA_ARGS__)
+	__KPROBE_HANDLER_DEFINE_x(7, function, NULL, __VA_ARGS__)
 #define KPROBE_HANDLER_DEFINE8(function, ...) \
-	__KPROBE_HANDLER_DEFINE_x(8, function, __VA_ARGS__)
+	__KPROBE_HANDLER_DEFINE_x(8, function, NULL, __VA_ARGS__)
+
+#define KPROBE_HANDLER_SYMADDR_DEFINE7(function, sym_addr, ...) \
+	__KPROBE_HANDLER_DEFINE_x(7, function, sym_addr, __VA_ARGS__)
+#define KPROBE_HANDLER_SYMADDR_DEFINE8(function, sym_addr, ...) \
+	__KPROBE_HANDLER_DEFINE_x(8, function, sym_addr, __VA_ARGS__)
 #endif
 
 #define KPROBE_HANDLER_DEFINE_OFFSET(func, offset, ...) \
-	__KPROBE_HANDLER_DEFINE_OFFSET(func, offset, __VA_ARGS__)
+	__KPROBE_HANDLER_DEFINE_OFFSET(func, NULL, offset, __VA_ARGS__)
+
+#define KPROBE_HANDLER_SYMADDR_DEFINE_OFFSET(func, sym_addr, offset, ...) \
+	__KPROBE_HANDLER_DEFINE_OFFSET(func, sym_addr, offset, __VA_ARGS__)
 
 /* The below is the tracepoint API for kernel module */
 #define TRACEPOINT_HANDLER_DEFINE(tracepoint, ...)	\
