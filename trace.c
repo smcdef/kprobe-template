@@ -11,7 +11,7 @@
 #include "trace.h"
 #include "kprobe.h"
 
-#define PROC_NAME	"tracing"
+#define PROC_NAME	CONFIG_MODULE_NAME
 
 #define PRINT_EVENT_ID_MAX	\
 	((1 << (sizeof(((struct print_event_entry *)0)->id) * 8)) - 1)
