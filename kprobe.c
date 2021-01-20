@@ -7,56 +7,41 @@
 #define pr_fmt(fmt) CONFIG_MODULE_NAME ": " fmt
 
 #include "kprobe.h"
+#include <linux/sched.h>
 
-#define CREATE_PRINT_EVENT
-#include "kprobe_print.h"
+static unsigned int rwsem_owner_pid;
+module_param(rwsem_owner_pid, uint, 0);
 
-/* kretprobe inode_permission entry */
-KRETPROBE_ENTRY_HANDLER_DEFINE2(inode_permission, int *, private,
-				struct inode *, inode, int, mask)
+static int wakeup_miss_task(void)
 {
-	if (!inode->i_rdev || inode->i_ino != 1033)
-		return -1;
+	struct task_struct *task;
+	struct mm_struct *mm;
+	struct rw_semaphore *sem;
+	struct task_struct *(*find_task_sym)(pid_t vnr);
+	int ret = -EINVAL;
 
-	*private = mask;
+	find_task_sym = (void *)kallsyms_lookup_name("find_task_by_vpid");
+	if (!find_task_sym)
+		return -ENODEV;
 
-	return 0;
+	rcu_read_lock();
+	task = find_task_sym(rwsem_owner_pid);
+	if (!task)
+		goto out;
+
+	mm = task->mm;
+	if (!mm)
+		goto out;
+
+	sem = &mm->mmap_sem;
+	if (atomic_long_read(&sem->count) != 0xfffffffeffffffff)
+		goto out;
+
+	atomic_long_inc(&sem->count);
+	ret = 0;
+out:
+	rcu_read_unlock();
+
+	return ret;
 }
-
-/* kretprobe inode_permission return */
-KRETPROBE_RET_HANDLER_DEFINE(inode_permission, int *, mask, int, retval)
-{
-	inode_permission_print(*mask, retval);
-	return 0;
-}
-
-/* kprobe do_sys_open */
-KPROBE_HANDLER_DEFINE4(do_sys_open,
-		       int, dfd, const char __user *, filename,
-		       int, flags, umode_t, mode)
-{
-	return 0;
-}
-
-/* kprobe __close_fd */
-KPROBE_HANDLER_DEFINE2(__close_fd,
-		       struct files_struct *, files, unsigned, fd)
-{
-	return 0;
-}
-
-/* tracepoint signal_generate */
-TRACEPOINT_HANDLER_DEFINE(signal_generate,
-			  int sig, struct siginfo *info,
-			  struct task_struct *task, int group, int result)
-{
-	static const char *result_name[] = {
-		"deliverd",
-		"ignored",
-		"already_pending",
-		"overflow_fail",
-		"lose_info",
-	};
-
-	signal_generate_print(sig, task, group, result_name[result]);
-}
+KPROBE_INITCALL(wakeup_miss_task, NULL);

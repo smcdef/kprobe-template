@@ -21,6 +21,7 @@ else
 PWD			:= $(shell pwd)
 KERNEL_HEAD		:= $(shell uname -r)
 KERNEL_DIR		:= /lib/modules/$(KERNEL_HEAD)/build
+pid			:= 0
 
 all:
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
@@ -29,7 +30,7 @@ clean:
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) clean
 
 install:
-	sudo insmod $(MODULE_NAME).ko
+	sudo insmod $(MODULE_NAME).ko rwsem_owner_pid=$(pid)
 
 remove:
 	sudo rmmod $(MODULE_NAME)
